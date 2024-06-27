@@ -6,7 +6,7 @@ import random
 from cuid2 import Cuid
 
 app = FastAPI()
-redis = Redis(host='localhost', port=6379, db=0)
+redis = Redis(host='redis', port=6379, db=0)
 
 
 class Item(BaseModel):
@@ -21,7 +21,6 @@ class Lootbox(BaseModel):
 
 
 CUID_GENERATOR: Cuid = Cuid(length=10)
-print(CUID_GENERATOR.generate())
 
 
 @app.post("/lootbox/create")
