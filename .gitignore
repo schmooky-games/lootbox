@@ -89,10 +89,6 @@ cython_debug/
 *.log
 *.db
 
-# Docker
-docker-compose.override.yml
-Dockerfile
-
 # VS Code
 .vscode/
 
