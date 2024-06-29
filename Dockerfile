@@ -1,8 +1,8 @@
 FROM python:3.11
 
-RUN mkdir /fastapi_app
+RUN mkdir /lootbox_service
 
-WORKDIR /fastapi_app
+WORKDIR /lootbox_service
 
 COPY requirements.txt .
 
