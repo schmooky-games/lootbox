@@ -1,6 +1,6 @@
 from fastapi import FastAPI, HTTPException
 from typing import List, Optional, Dict, Any
-# from redis import Redis
+from redis import Redis
 import random
 from cuid2 import Cuid
 
@@ -9,7 +9,7 @@ from models.models import Lootbox, Meta, Item
 from prometheus_fastapi_instrumentator import Instrumentator
 
 app = FastAPI(docs_url="/api")
-# redis = Redis(host='redis', port=6379, db=0)
+redis = Redis.from_url("redis://:WXKmtngVvJxPtLc4wFQGNUFBomqpkfahpPk0AFWbIo6HIR3JxGcHaoc9Kv1lBMMs@212.192.14.23:5432/0")
 Instrumentator().instrument(app).expose(app)
 CUID_GENERATOR: Cuid = Cuid(length=10)
 
