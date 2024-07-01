@@ -4,13 +4,18 @@ from redis import Redis
 import random
 from cuid2 import Cuid
 
+import config
 from models.models import Lootbox, Meta, Item
 
 from prometheus_fastapi_instrumentator import Instrumentator
 
 app = FastAPI(docs_url="/api")
-redis = Redis.from_url("redis://:WXKmtngVvJxPtLc4wFQGNUFBomqpkfahpPk0AFWbIo6HIR3JxGcHaoc9Kv1lBMMs@212.192.14.23:5432/0")
+
+redis_uri = config.REDIS_URI
+redis = Redis.from_url(url=redis_uri, encoding="utf8", decode_responses=True)
+print(redis_uri)
 Instrumentator().instrument(app).expose(app)
+
 CUID_GENERATOR: Cuid = Cuid(length=10)
 
 
@@ -25,22 +30,21 @@ def create_lootbox(items: List[Dict[str, Any]], draws_count: Optional[int] = Non
     ]
     lootbox_id = CUID_GENERATOR.generate()
     lootbox = Lootbox(id=lootbox_id, items=lootbox_items, draws_count=draws_count, is_active=True)
-    lootboxes[lootbox_id] = lootbox
-    # redis.set(lootbox_id, lootbox.json())
+    # lootboxes[lootbox_id] = lootbox
+    redis.set(lootbox_id, lootbox.model_dump_json())
     return lootbox
 
 
 @app.get("/get_loot/{lootbox_id}", response_model=Item)
 def get_loot(lootbox_id: str):
-    # lootbox_data = redis.get(lootbox_id)
-    # if not lootbox_data:
-    #     raise HTTPException(status_code=404, detail="Lootbox not found")
-    #
-    # lootbox = Lootbox.model_validate_json(lootbox_data)
-    if lootbox_id not in lootboxes:
+    lootbox_data = redis.get(lootbox_id)
+    if not lootbox_data:
         raise HTTPException(status_code=404, detail="Lootbox not found")
+    lootbox = Lootbox.model_validate_json(lootbox_data)
 
-    lootbox = lootboxes[lootbox_id]
+    # if lootbox_id not in lootboxes:
+    #     raise HTTPException(status_code=404, detail="Lootbox not found")
+    # lootbox = lootboxes[lootbox_id]
 
     if not lootbox.is_active:
         raise HTTPException(status_code=404, detail="Lootbox is not active")
