@@ -1,28 +1,20 @@
-from fastapi import FastAPI, HTTPException
-from typing import List, Optional, Dict, Any
+from fastapi import APIRouter, HTTPException
+from typing import List, Dict, Any, Optional
 from redis import Redis
 import random
 from cuid2 import Cuid
 
-import config
-from models.models import Lootbox, Meta, Item
+from src.config import REDIS_URI
+from src.lootboxes.equal.models import Lootbox, Meta, Item
 
-from prometheus_fastapi_instrumentator import Instrumentator
+router = APIRouter()
 
-app = FastAPI(docs_url="/api")
+redis = Redis.from_url(url=REDIS_URI)
 
-redis_uri = config.REDIS_URI
-redis = Redis.from_url(url=redis_uri, encoding="utf8", decode_responses=True)
-print(redis_uri)
-Instrumentator().instrument(app).expose(app)
-
-CUID_GENERATOR: Cuid = Cuid(length=10)
+CUID_GENERATOR = Cuid(length=10)
 
 
-lootboxes = {}
-
-
-@app.post("/create_lootbox", response_model=Lootbox)
+@router.post("/create_lootbox", response_model=Lootbox)
 def create_lootbox(items: List[Dict[str, Any]], draws_count: Optional[int] = None):
     lootbox_items = [
         Item(id=CUID_GENERATOR.generate(), data=item.get('data', {}), meta=Meta(name=item.get('meta', {}).get('name', '')))
@@ -30,21 +22,16 @@ def create_lootbox(items: List[Dict[str, Any]], draws_count: Optional[int] = Non
     ]
     lootbox_id = CUID_GENERATOR.generate()
     lootbox = Lootbox(id=lootbox_id, items=lootbox_items, draws_count=draws_count, is_active=True)
-    # lootboxes[lootbox_id] = lootbox
     redis.set(lootbox_id, lootbox.model_dump_json())
     return lootbox
 
 
-@app.get("/get_loot/{lootbox_id}", response_model=Item)
+@router.get("/get_loot/{lootbox_id}", response_model=Item)
 def get_loot(lootbox_id: str):
     lootbox_data = redis.get(lootbox_id)
     if not lootbox_data:
         raise HTTPException(status_code=404, detail="Lootbox not found")
     lootbox = Lootbox.model_validate_json(lootbox_data)
-
-    # if lootbox_id not in lootboxes:
-    #     raise HTTPException(status_code=404, detail="Lootbox not found")
-    # lootbox = lootboxes[lootbox_id]
 
     if not lootbox.is_active:
         raise HTTPException(status_code=404, detail="Lootbox is not active")
@@ -57,22 +44,26 @@ def get_loot(lootbox_id: str):
     return drawed_item
 
 
-@app.post("/deactivate_lootbox/{lootbox_id}", response_model=Lootbox)
+@router.post("/deactivate_lootbox/{lootbox_id}", response_model=Lootbox)
 def deactivate_lootbox(lootbox_id: str):
-    if lootbox_id not in lootboxes:
+    lootbox_data = redis.get(lootbox_id)
+    if not lootbox_data:
         raise HTTPException(status_code=404, detail="Lootbox not found")
-
-    lootbox = lootboxes[lootbox_id]
+    lootbox = Lootbox.model_validate_json(lootbox_data)
     lootbox.is_active = False
+    redis.set(lootbox_id, lootbox.model_dump_json())
     return lootbox
 
 
-@app.get("/lootboxes", response_model=Dict[str, Lootbox])
+@router.get("/lootboxes", response_model=Dict[str, Lootbox])
 def list_lootboxes():
-    return lootboxes
+    all_keys = redis.keys()
+    lootboxes_data = {}
 
+    for key in all_keys:
+        lootbox_data = redis.get(key)
+        if lootbox_data:
+            lootbox = Lootbox.model_validate_json(lootbox_data)
+            lootboxes_data[key.decode("utf-8")] = lootbox
 
-# Запуск приложения
-if __name__ == "__main__":
-    import uvicorn
-    uvicorn.run(app, host="0.0.0.0", port=8000)
+    return lootboxes_data
