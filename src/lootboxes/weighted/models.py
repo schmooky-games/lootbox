@@ -1,20 +1,11 @@
 from pydantic import BaseModel
-from typing import List, Dict, Any, Optional
+from typing import List, Optional
 
-
-class Meta(BaseModel):
-    name: str
-
-
-class Item(BaseModel):
-    id: str
-    data: Dict[str, Any]
-    meta: Meta
-    weight: float
+from src.lootboxes.models import WeightedItem
 
 
 class Lootbox(BaseModel):
     id: str
-    items: List[Item]
+    items: List[WeightedItem]
     draws_count: Optional[int] = None
     is_active: bool = True

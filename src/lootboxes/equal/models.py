@@ -1,15 +1,7 @@
 from pydantic import BaseModel
-from typing import Any, Dict, List, Optional
+from typing import List, Optional
 
-
-class Meta(BaseModel):
-    name: str
-
-
-class Item(BaseModel):
-    id: str
-    data: Dict[str, Any]
-    meta: Meta
+from src.lootboxes.models import Item
 
 
 class Lootbox(BaseModel):
@@ -17,4 +9,3 @@ class Lootbox(BaseModel):
     items: List[Item]
     draws_count: Optional[int] = None
     is_active: bool = True
-

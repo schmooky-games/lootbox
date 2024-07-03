@@ -2,9 +2,9 @@ from fastapi import HTTPException, APIRouter
 from typing import List, Dict, Any, Optional
 import numpy as np
 
-from src.lootboxes.router import CUID_GENERATOR, redis
+from src.lootboxes.models import Meta, WeightedItem
 from src.lootboxes.weighted.models import Lootbox
-from src.lootboxes.models import WeightedItem, Meta
+from src.lootboxes.router import CUID_GENERATOR, redis
 
 router = APIRouter()
 
@@ -47,5 +47,8 @@ def get_loot(lootbox_id: str):
         replace=True,
         p=normalized_weights
     )[0]
+
+    lootbox.items.remove(drawed_item)
+    redis.set(lootbox_id, lootbox.model_dump_json())
 
     return drawed_item

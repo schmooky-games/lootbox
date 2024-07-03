@@ -4,13 +4,17 @@ from fastapi_healthcheck import HealthCheckFactory, healthCheckRoute
 from healthchecks.redis_healthcheck import HealthCheckRedis
 
 from src.config import REDIS_URI
+from src.lootboxes.router import router as general_router
 from src.lootboxes.equal.router import router as equal_lootbox_router
 from src.lootboxes.weighted.router import router as weighted_lootbox_router
+from src.lootboxes.exclusive.router import router as exclusive_lootbox_router
 
 app = FastAPI(docs_url="/api")
 
+app.include_router(general_router, prefix="", tags=["general methods"])
 app.include_router(equal_lootbox_router, prefix="/equal", tags=["equal lootboxes"])
 app.include_router(weighted_lootbox_router, prefix="/weighted", tags=["weighted lootboxes"])
+app.include_router(exclusive_lootbox_router, prefix="/exclusive", tags=["exclusive lootboxes"])
 
 Instrumentator().instrument(app).expose(app)
 

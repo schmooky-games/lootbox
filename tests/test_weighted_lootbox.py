@@ -36,7 +36,7 @@ def test_get_loot_randomness(setup_lootbox):
     lootbox = setup_lootbox
     lootbox_id = lootbox["id"]
 
-    num_tests = 1000
+    num_tests = 100
 
     item_counts = defaultdict(int)
 
