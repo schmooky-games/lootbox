@@ -3,8 +3,8 @@ from typing import List, Dict, Any, Optional
 import numpy as np
 
 from src.lootboxes.router import CUID_GENERATOR, redis
-from src.lootboxes.weighted.models import Lootbox
-from src.lootboxes.models import WeightedItem, Meta
+from src.lootboxes.weighted.schemas import Lootbox
+from src.lootboxes.schemas import WeightedItem, Meta
 
 router = APIRouter()
 

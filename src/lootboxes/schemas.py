@@ -16,7 +16,7 @@ class WeightedItem(Item):
     weight: float
 
 
-class LootboxResponse(BaseModel):
+class Lootbox(BaseModel):
     id: str
     items: List[Union[Item, WeightedItem]]
     draws_count: Optional[int] = None

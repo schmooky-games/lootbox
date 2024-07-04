@@ -2,8 +2,8 @@ from fastapi import HTTPException, APIRouter
 from typing import List, Dict, Any, Optional
 import numpy as np
 
-from src.lootboxes.models import Meta, WeightedItem
-from src.lootboxes.weighted.models import Lootbox
+from src.lootboxes.schemas import Meta, WeightedItem
+from src.lootboxes.weighted.schemas import Lootbox
 from src.lootboxes.router import CUID_GENERATOR, redis
 
 router = APIRouter()

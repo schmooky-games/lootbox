@@ -3,8 +3,8 @@ from typing import List, Dict, Any, Optional
 
 import random
 
-from src.lootboxes.models import Meta, Item
-from src.lootboxes.equal.models import Lootbox
+from src.lootboxes.schemas import Meta, Item
+from src.lootboxes.equal.schemas import Lootbox
 from src.lootboxes.router import CUID_GENERATOR, redis
 
 router = APIRouter()
