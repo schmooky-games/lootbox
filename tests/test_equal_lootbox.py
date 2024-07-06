@@ -4,13 +4,16 @@ from collections import defaultdict
 from fastapi.testclient import TestClient
 from redis import Redis
 
-from src.config import REDIS_URI
+from src.config import REDIS_URI, TEMP_TOKEN
 from src.main import app
 
 client = TestClient(app)
 
 redis = Redis.from_url(url=REDIS_URI)
 
+headers = {
+    "Authorization": f"Bearer {TEMP_TOKEN}"
+}
 
 @pytest.fixture
 def setup_lootbox():
@@ -19,7 +22,7 @@ def setup_lootbox():
         {"data": {"value": "item2"}, "meta": {"name": "Item 2"}},
         {"data": {"value": "item3"}, "meta": {"name": "Item 3"}}
     ]
-    response = client.post("/equal/create_lootbox", json=payload)
+    response = client.post("/equal/create_lootbox", json=payload, headers=headers)
     assert response.status_code == 200
     lootbox = response.json()
 
@@ -39,7 +42,7 @@ def test_get_loot_randomness(setup_lootbox):
     item_counts = defaultdict(int)
 
     for _ in range(num_tests):
-        response = client.get(f"/equal/get_loot/{lootbox_id}")
+        response = client.get(f"/equal/get_loot/{lootbox_id}", headers=headers)
         assert response.status_code == 200
         item = response.json()
 

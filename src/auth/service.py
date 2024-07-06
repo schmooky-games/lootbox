@@ -1,5 +1,5 @@
 from datetime import timedelta
-from fastapi import Depends, Request, HTTPException
+from fastapi import Depends, HTTPException
 from fastapi.security import HTTPBearer
 
 from src.auth.utils import redis
