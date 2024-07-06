@@ -1,13 +1,13 @@
 from fastapi import HTTPException, APIRouter
 from typing import List, Dict, Any, Optional
-
 import random
 
 from src.lootboxes.schemas import Meta, Item
 from src.lootboxes.equal.schemas import Lootbox
-from src.lootboxes.router import CUID_GENERATOR, redis
+from src.lootboxes.utils import CUID_GENERATOR, redis
 
 router = APIRouter()
+
 
 @router.post("/create_lootbox", response_model=Lootbox)
 def create_lootbox(items: List[Dict[str, Any]], draws_count: Optional[int] = None):

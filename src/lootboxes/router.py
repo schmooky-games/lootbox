@@ -1,15 +1,9 @@
 from typing import Dict
-
-from cuid2 import Cuid
 from fastapi import APIRouter, HTTPException
-from redis import Redis
 
-from src.config import REDIS_URI
 from src.lootboxes.schemas import Lootbox
 
 router = APIRouter()
-redis = Redis.from_url(url=REDIS_URI)
-CUID_GENERATOR = Cuid(length=10)
 
 
 @router.get("/lootbox/{lootbox_id}", response_model=Lootbox)

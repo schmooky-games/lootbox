@@ -104,3 +104,5 @@ local_settings.py
 
 # macOS
 .DS_Store
+
+add_token.py
