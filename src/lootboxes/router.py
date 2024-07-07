@@ -2,6 +2,7 @@ from typing import Dict
 from fastapi import APIRouter, HTTPException
 
 from src.lootboxes.schemas import Lootbox
+from src.lootboxes.utils import redis
 
 router = APIRouter()
 

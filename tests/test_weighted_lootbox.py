@@ -15,6 +15,7 @@ headers = {
     "Authorization": f"Bearer {TEMP_TOKEN}"
 }
 
+
 @pytest.fixture
 def setup_lootbox():
     payload = [
