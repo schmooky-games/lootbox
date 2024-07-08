@@ -3,7 +3,7 @@ from datetime import timedelta, datetime
 from fastapi import Depends, HTTPException
 from fastapi.security import HTTPBearer
 
-from src.auth.utils import redis
+from src.redis_connection import redis
 from src.config import SECRET_KEY
 
 TOKEN_EXPIRATION = timedelta(hours=1)

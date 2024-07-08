@@ -2,9 +2,11 @@ from fastapi import HTTPException, APIRouter
 from typing import List, Dict, Any, Optional
 import numpy as np
 
+from src.exceptions import ErrorHTTPException
 from src.lootboxes.schemas import Meta, WeightedItem
 from src.lootboxes.weighted.schemas import Lootbox
-from src.lootboxes.utils import CUID_GENERATOR, redis
+from src.lootboxes.utils import CUID_GENERATOR
+from src.redis_connection import redis
 
 router = APIRouter()
 
@@ -29,15 +31,17 @@ def create_lootbox(items: List[Dict[str, Any]], draws_count: Optional[int] = Non
 @router.get("/get_loot/{lootbox_id}", response_model=WeightedItem)
 def get_loot(lootbox_id: str):
     lootbox_data = redis.get(lootbox_id)
+
     if not lootbox_data:
-        raise HTTPException(status_code=404, detail="Lootbox not found")
+        raise ErrorHTTPException(status_code=400, error_code=1001, detail="Lootbox not found")
+
     lootbox = Lootbox.model_validate_json(lootbox_data)
 
     if not lootbox.is_active:
-        raise HTTPException(status_code=404, detail="Lootbox is not active")
+        raise ErrorHTTPException(status_code=400, error_code=1003, detail="Lootbox is not active")
 
     if not lootbox.items:
-        raise HTTPException(status_code=404, detail="No items in lootbox")
+        raise ErrorHTTPException(status_code=400, error_code=1004, detail="No items in lootbox")
 
     weights = np.array([item.weight for item in lootbox.items])
     normalized_weights = weights / np.sum(weights)

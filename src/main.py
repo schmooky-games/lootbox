@@ -4,6 +4,7 @@ from fastapi_healthcheck import HealthCheckFactory, healthCheckRoute
 from healthchecks.redis_healthcheck import HealthCheckRedis
 
 from src.config import REDIS_URI
+from src.error_handlers import setup_error_handlers
 from src.lootboxes.router import router as general_router
 from src.lootboxes.equal.router import router as equal_lootbox_router
 from src.lootboxes.weighted.router import router as weighted_lootbox_router
@@ -11,6 +12,8 @@ from src.lootboxes.exclusive.router import router as exclusive_lootbox_router
 from src.auth.router import router as auth_router, verify_token
 
 app = FastAPI(docs_url="/api")
+
+setup_error_handlers(app)
 
 app.include_router(auth_router, prefix="/auth", tags=["auth"])
 app.include_router(general_router, prefix="", tags=["general methods"], dependencies=[Depends(verify_token)])

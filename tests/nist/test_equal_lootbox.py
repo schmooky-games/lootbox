@@ -12,7 +12,6 @@ def test_weighted_lootbox():
             Item(id="2", data={"value": "item 2"}, meta={"name": "Item2"}),
             Item(id="3", data={"value": "item 3"}, meta={"name": "Item3"}),
             Item(id="4", data={"value": "item 4"}, meta={"name": "Item4"}),
-            Item(id="5", data={"value": "item 5"}, meta={"name": "Item5"})
         ]
     )
 

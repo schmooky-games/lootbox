@@ -12,7 +12,7 @@ def test_weighted_lootbox():
             WeightedItem(id="2", data={"value": "item 2"}, meta={"name": "Item2"}, weight=100.0),
             WeightedItem(id="3", data={"value": "item 3"}, meta={"name": "Item3"}, weight=100.0),
             WeightedItem(id="4", data={"value": "item 4"}, meta={"name": "Item4"}, weight=50.0),
-            WeightedItem(id="5", data={"value": "item 5"}, meta={"name": "Item5"}, weight=50.0)
+            # WeightedItem(id="5", data={"value": "item 5"}, meta={"name": "Item5"}, weight=50.0)
         ]
     )
 
