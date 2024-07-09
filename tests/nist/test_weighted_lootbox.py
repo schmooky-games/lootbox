@@ -1,4 +1,4 @@
-from src.lootboxes.weighted.schemas import WeightedItem, Lootbox
+from src.lootboxes.schemas import WeightedItem, Lootbox
 from tests.nist.utils import simulate_weighted_lootbox_draws, run_nist_tests
 
 

@@ -1,9 +1,8 @@
 import numpy as np
-from src.lootboxes.equal.schemas import Lootbox as EqualLootbox
-from src.lootboxes.weighted.schemas import Lootbox as WeightedLootbox
+from src.lootboxes.schemas import Lootbox
 
 
-def simulate_equal_lootbox_draws(lootbox: EqualLootbox, num_draws: int) -> str:
+def simulate_equal_lootbox_draws(lootbox: Lootbox, num_draws: int) -> str:
     draws = np.random.choice(
         a=range(len(lootbox.items)),
         size=num_draws,
@@ -13,7 +12,7 @@ def simulate_equal_lootbox_draws(lootbox: EqualLootbox, num_draws: int) -> str:
     return ''.join(format(draw, f'0{len(lootbox.items)}b') for draw in draws)
 
 
-def simulate_weighted_lootbox_draws(lootbox: WeightedLootbox, num_draws: int) -> str:
+def simulate_weighted_lootbox_draws(lootbox: Lootbox, num_draws: int) -> str:
     weights = np.array([item.weight for item in lootbox.items])
     normalized_weights = weights / np.sum(weights)
 

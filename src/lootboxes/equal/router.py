@@ -1,10 +1,10 @@
-from fastapi import HTTPException, APIRouter
+from fastapi import APIRouter
 from typing import List, Dict, Any, Optional
 import random
 
 from src.exceptions import ErrorHTTPException
-from src.lootboxes.schemas import Meta, Item
-from src.lootboxes.equal.schemas import Lootbox
+from src.lootboxes.constants import WRONG_LOOTBOX_TYPE
+from src.lootboxes.schemas import Meta, Item, Lootbox
 from src.lootboxes.utils import CUID_GENERATOR
 from src.redis_connection import redis
 
@@ -14,7 +14,11 @@ router = APIRouter()
 @router.post("/create_lootbox", response_model=Lootbox)
 def create_lootbox(items: List[Dict[str, Any]], draws_count: Optional[int] = None):
     lootbox_items = [
-        Item(id=CUID_GENERATOR.generate(), data=item.get('data', {}), meta=Meta(name=item.get('meta', {}).get('name', '')))
+        Item(
+            id=CUID_GENERATOR.generate(),
+            data=item.get('data', {}),
+            meta=Meta(name=item.get('meta', {}).get('name', ''))
+        )
         for item in items
     ]
     lootbox_id = CUID_GENERATOR.generate()
@@ -37,6 +41,13 @@ def get_loot(lootbox_id: str):
 
     if not lootbox.items:
         raise ErrorHTTPException(status_code=400, error_code=1004, detail="No items in lootbox")
+
+    if lootbox.is_weighted():
+        raise ErrorHTTPException(
+            status_code=400,
+            error_code=WRONG_LOOTBOX_TYPE,
+            detail="Cannot get loot from weighted lootbox using this endpoint"
+        )
 
     drawed_item = random.choice(lootbox.items)
 

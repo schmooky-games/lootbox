@@ -1,10 +1,10 @@
-from fastapi import HTTPException, APIRouter
+from fastapi import APIRouter
 from typing import List, Dict, Any, Optional
 import numpy as np
 
 from src.exceptions import ErrorHTTPException
-from src.lootboxes.weighted.schemas import Lootbox
-from src.lootboxes.schemas import WeightedItem, Meta
+from src.lootboxes.constants import WRONG_LOOTBOX_TYPE
+from src.lootboxes.schemas import Lootbox, WeightedItem, Meta
 from src.lootboxes.utils import CUID_GENERATOR
 from src.redis_connection import redis
 
@@ -42,6 +42,13 @@ def get_loot(lootbox_id: str):
 
     if not lootbox.items:
         raise ErrorHTTPException(status_code=400, error_code=1004, detail="No items in lootbox")
+
+    if not lootbox.is_weighted():
+        raise ErrorHTTPException(
+            status_code=400,
+            error_code=WRONG_LOOTBOX_TYPE,
+            detail="Cannot get loot from equal lootbox using this endpoint"
+        )
 
     weights = np.array([item.weight for item in lootbox.items])
     normalized_weights = weights / np.sum(weights)

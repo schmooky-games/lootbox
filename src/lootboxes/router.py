@@ -1,7 +1,6 @@
 from typing import Dict
-from fastapi import APIRouter, HTTPException
+from fastapi import APIRouter
 
-from src.error_handlers import error_response
 from src.exceptions import ErrorHTTPException
 from src.lootboxes.constants import LOOTBOX_NOT_FOUND, EMPTY_LOOTBOXES_LIST
 from src.lootboxes.schemas import Lootbox
@@ -15,7 +14,7 @@ def get_lootbox(lootbox_id: str):
     lootbox_data = redis.get(lootbox_id)
 
     if not lootbox_data:
-        raise ErrorHTTPException(404, LOOTBOX_NOT_FOUND, f"Lootbox with id {lootbox_id} not found")
+        raise ErrorHTTPException(400, LOOTBOX_NOT_FOUND, f"Lootbox with id {lootbox_id} not found")
 
     lootbox = Lootbox.model_validate_json(lootbox_data)
     return lootbox
@@ -26,7 +25,7 @@ def deactivate_lootbox(lootbox_id: str):
     lootbox_data = redis.get(lootbox_id)
 
     if not lootbox_data:
-        raise ErrorHTTPException(404, LOOTBOX_NOT_FOUND, f"Lootbox with id {lootbox_id} not found")
+        raise ErrorHTTPException(400, LOOTBOX_NOT_FOUND, f"Lootbox with id {lootbox_id} not found")
 
     lootbox = Lootbox.model_validate_json(lootbox_data)
     lootbox.is_active = False
@@ -40,12 +39,13 @@ def list_lootboxes():
     lootboxes_data = {}
 
     if len(all_keys) == 0:
-        raise ErrorHTTPException(204, EMPTY_LOOTBOXES_LIST, "Lootboxes list is empty")
+        raise ErrorHTTPException(400, EMPTY_LOOTBOXES_LIST, "Lootboxes list is empty")
 
     for key in all_keys:
-        lootbox_data = redis.get(key)
-        if lootbox_data:
-            lootbox = Lootbox.model_validate_json(lootbox_data)
-            lootboxes_data[key.decode("utf-8")] = lootbox
+        if not key.decode("utf-8").startswith("token:"):
+            lootbox_data = redis.get(key)
+            if lootbox_data:
+                lootbox = Lootbox.model_validate_json(lootbox_data)
+                lootboxes_data[key.decode("utf-8")] = lootbox
 
     return lootboxes_data

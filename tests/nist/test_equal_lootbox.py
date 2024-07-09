@@ -1,4 +1,4 @@
-from src.lootboxes.equal.schemas import Item, Lootbox
+from src.lootboxes.schemas import Item, Lootbox
 from tests.nist.utils import simulate_equal_lootbox_draws, run_nist_tests
 
 
