@@ -1,7 +1,6 @@
+import secrets
 from fastapi import APIRouter
 from typing import List, Dict, Any, Optional
-import random
-
 from src.exceptions import ErrorHTTPException
 from src.lootboxes.constants import WRONG_LOOTBOX_TYPE
 from src.lootboxes.schemas import Meta, Item, Lootbox
@@ -49,6 +48,6 @@ def get_loot(lootbox_id: str):
             detail="Cannot get loot from weighted lootbox using this endpoint"
         )
 
-    drawed_item = random.choice(lootbox.items)
+    drawed_item = secrets.choice(lootbox.items)
 
     return drawed_item

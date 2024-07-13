@@ -1,7 +1,6 @@
 import numpy as np
 from src.lootboxes.schemas import Lootbox
 
-
 def simulate_equal_lootbox_draws(lootbox: Lootbox, num_draws: int) -> str:
     draws = np.random.choice(
         a=range(len(lootbox.items)),
@@ -23,7 +22,8 @@ def simulate_weighted_lootbox_draws(lootbox: Lootbox, num_draws: int) -> str:
         p=normalized_weights
     )
 
-    return ''.join(format(draw, f'0{len(lootbox.items)}b') for draw in draws)
+    binary_strings = [bin(draw)[2:] for draw in draws]
+    return ''.join(binary_strings)
     # bitstring = ''.join(format(draw, f'0{len(lootbox.items)}b') for draw in draws)
     #
     # with open(filename, 'w') as file:
@@ -46,7 +46,7 @@ def simulate_weighted_lootbox_draws(lootbox: Lootbox, num_draws: int) -> str:
 
 
 def run_nist_tests(bitstring: str):
-    from NIST_Tests import NIST_Tests
+    from tests.nist.NIST_Tests import NIST_Tests
 
     nist_tests = NIST_Tests()
     results = nist_tests.run(bitstring)

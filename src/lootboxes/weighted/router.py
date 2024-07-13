@@ -1,7 +1,7 @@
 from fastapi import APIRouter
 from typing import List, Dict, Any, Optional
-import numpy as np
 
+from src.lootboxes.weighted.utils import weighted_random
 from src.exceptions import ErrorHTTPException
 from src.lootboxes.constants import WRONG_LOOTBOX_TYPE
 from src.lootboxes.schemas import Lootbox, WeightedItem, Meta
@@ -50,13 +50,7 @@ def get_loot(lootbox_id: str):
             detail="Cannot get loot from equal lootbox using this endpoint"
         )
 
-    weights = np.array([item.weight for item in lootbox.items])
-    normalized_weights = weights / np.sum(weights)
-    drawed_item = np.random.choice(
-        a=lootbox.items,
-        size=1,
-        replace=True,
-        p=normalized_weights
-    )[0]
+    weights = list([item.weight for item in lootbox.items])
+    drawed_item = weighted_random(items=lootbox.items, weights=weights)
 
     return drawed_item

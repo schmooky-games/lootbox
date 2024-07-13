@@ -33,19 +33,19 @@ def deactivate_lootbox(lootbox_id: str):
     return lootbox
 
 
-@router.get("/lootboxes", response_model=Dict[str, Lootbox])
-def list_lootboxes():
-    all_keys = redis.keys()
-    lootboxes_data = {}
-
-    if len(all_keys) == 0:
-        raise ErrorHTTPException(400, EMPTY_LOOTBOXES_LIST, "Lootboxes list is empty")
-
-    for key in all_keys:
-        if not key.decode("utf-8").startswith("token:"):
-            lootbox_data = redis.get(key)
-            if lootbox_data:
-                lootbox = Lootbox.model_validate_json(lootbox_data)
-                lootboxes_data[key.decode("utf-8")] = lootbox
-
-    return lootboxes_data
+# @router.get("/lootboxes", response_model=Dict[str, Lootbox])
+# def list_lootboxes():
+#     all_keys = redis.keys()
+#     lootboxes_data = {}
+#
+#     if len(all_keys) == 0:
+#         raise ErrorHTTPException(400, EMPTY_LOOTBOXES_LIST, "Lootboxes list is empty")
+#
+#     for key in all_keys:
+#         if not key.decode("utf-8").startswith("token:"):
+#             lootbox_data = redis.get(key)
+#             if lootbox_data:
+#                 lootbox = Lootbox.model_validate_json(lootbox_data)
+#                 lootboxes_data[key.decode("utf-8")] = lootbox
+#
+#     return lootboxes_data
