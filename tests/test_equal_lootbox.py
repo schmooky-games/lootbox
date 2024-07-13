@@ -1,40 +1,44 @@
 import json
 import pytest
 from collections import defaultdict
-from fastapi.testclient import TestClient
-from redis import Redis
+from httpx import AsyncClient
+import pytest_asyncio
 
-from src.config import REDIS_URI, TEMP_TOKEN
+from src.config import TEMP_TOKEN
 from src.main import app
-
-client = TestClient(app)
-
-redis = Redis.from_url(url=REDIS_URI)
+from src.redis_connection import redis
 
 headers = {
     "Authorization": f"Bearer {TEMP_TOKEN}"
 }
 
 
-@pytest.fixture
-def setup_lootbox():
+@pytest_asyncio.fixture
+async def async_client():
+    async with AsyncClient(app=app, base_url="http://test") as client:
+        yield client
+
+
+@pytest_asyncio.fixture
+async def setup_lootbox(async_client):
     payload = [
         {"data": {"value": "item1"}, "meta": {"name": "Item 1"}},
         {"data": {"value": "item2"}, "meta": {"name": "Item 2"}},
         {"data": {"value": "item3"}, "meta": {"name": "Item 3"}}
     ]
-    response = client.post("/equal/create_lootbox", json=payload, headers=headers)
+    response = await async_client.post("/equal/create_lootbox", json=payload, headers=headers)
     assert response.status_code == 200
     lootbox = response.json()
 
-    redis.set(lootbox["id"], json.dumps(lootbox))
+    await redis.set(lootbox["id"], json.dumps(lootbox))
 
     yield lootbox
 
-    redis.delete(lootbox["id"])
+    await redis.delete(lootbox["id"])
 
 
-def test_get_loot_randomness(setup_lootbox):
+@pytest.mark.asyncio
+async def test_get_loot_randomness(async_client, setup_lootbox):
     lootbox = setup_lootbox
     lootbox_id = lootbox["id"]
 
@@ -43,11 +47,11 @@ def test_get_loot_randomness(setup_lootbox):
     item_counts = defaultdict(int)
 
     for _ in range(num_tests):
-        response = client.get(f"/equal/get_loot/{lootbox_id}", headers=headers)
+        response = await async_client.get(f"/equal/get_loot/{lootbox_id}", headers=headers)
         assert response.status_code == 200
         item = response.json()
 
-        stored_lootbox = json.loads(redis.get(lootbox_id))
+        stored_lootbox = json.loads(await redis.get(lootbox_id))
 
         for lootbox_item in stored_lootbox["items"]:
             if item == lootbox_item:

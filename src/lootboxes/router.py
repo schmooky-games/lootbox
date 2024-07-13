@@ -1,4 +1,4 @@
-from typing import Dict
+
 from fastapi import APIRouter
 
 from src.exceptions import ErrorHTTPException
@@ -10,8 +10,8 @@ router = APIRouter()
 
 
 @router.get("/lootbox/{lootbox_id}", response_model=Lootbox)
-def get_lootbox(lootbox_id: str):
-    lootbox_data = redis.get(lootbox_id)
+async def get_lootbox(lootbox_id: str):
+    lootbox_data = await redis.get(lootbox_id)
 
     if not lootbox_data:
         raise ErrorHTTPException(400, LOOTBOX_NOT_FOUND, f"Lootbox with id {lootbox_id} not found")
@@ -21,15 +21,15 @@ def get_lootbox(lootbox_id: str):
 
 
 @router.post("/deactivate_lootbox/{lootbox_id}", response_model=Lootbox)
-def deactivate_lootbox(lootbox_id: str):
-    lootbox_data = redis.get(lootbox_id)
+async def deactivate_lootbox(lootbox_id: str):
+    lootbox_data = await redis.get(lootbox_id)
 
     if not lootbox_data:
         raise ErrorHTTPException(400, LOOTBOX_NOT_FOUND, f"Lootbox with id {lootbox_id} not found")
 
     lootbox = Lootbox.model_validate_json(lootbox_data)
     lootbox.is_active = False
-    redis.set(lootbox_id, lootbox.model_dump_json())
+    await redis.set(lootbox_id, lootbox.model_dump_json())
     return lootbox
 
 
