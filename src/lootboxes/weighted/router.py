@@ -1,5 +1,5 @@
 from fastapi import APIRouter
-from typing import List, Dict, Any, Optional
+from typing import List, Dict, Any, Optional, Union
 
 from src.lootboxes.weighted.utils import weighted_random
 from src.exceptions import ErrorHTTPException
@@ -12,7 +12,7 @@ router = APIRouter()
 
 
 @router.post("/create_lootbox", response_model=Lootbox)
-async def create_lootbox(items: List[Dict[str, Any]], draws_count: Optional[int] = None):
+async def create_lootbox(items: List[Dict[str, Union[Any, float]]], draws_count: Optional[int] = None):
     lootbox_items = [
         WeightedItem(
             id=CUID_GENERATOR.generate(),

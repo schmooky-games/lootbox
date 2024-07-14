@@ -1,6 +1,7 @@
 import secrets
 from fastapi import APIRouter
 from typing import List, Dict, Any, Optional
+
 from src.exceptions import ErrorHTTPException
 from src.lootboxes.constants import WRONG_LOOTBOX_TYPE
 from src.lootboxes.schemas import Meta, Item, Lootbox

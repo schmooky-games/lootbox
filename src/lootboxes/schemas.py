@@ -24,20 +24,10 @@ class Lootbox(BaseModel):
 
     @field_validator('items', mode='before')
     def validate_items(cls, v):
-        if isinstance(v, list) and all(isinstance(item, (Item, WeightedItem)) for item in v):
-            return v
-        validated_items = []
-        for item in v:
-            if isinstance(item, dict):
-                if 'weight' in item:
-                    validated_items.append(WeightedItem(**item))
-                else:
-                    validated_items.append(Item(**item))
-            elif isinstance(item, (Item, WeightedItem)):
-                validated_items.append(item)
-            else:
-                raise ValueError(f"Invalid item type: {type(item)}")
-        return validated_items
+        return [WeightedItem(**item) if isinstance(item, dict) and 'weight' in item
+            else Item(**item) if isinstance(item, dict)
+            else item
+            for item in v]
 
     def is_weighted(self) -> bool:
         return any(isinstance(item, WeightedItem) for item in self.items)
