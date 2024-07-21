@@ -1,131 +1,144 @@
-use std::{convert::Infallible, io};
+use actix_web::{web, App, HttpServer, HttpResponse, Result, error};
+use serde::{Deserialize, Serialize};
+use rand::seq::SliceRandom;
+use redis::AsyncCommands;
+use uuid::Uuid;
+use dotenv::dotenv;
 
-use actix_files::{Files, NamedFile};
-use actix_session::{storage::CookieSessionStore, Session, SessionMiddleware};
-use actix_web::{
-    error, get,
-    http::{
-        header::{self, ContentType},
-        Method, StatusCode,
-    },
-    middleware, web, App, Either, HttpRequest, HttpResponse, HttpServer, Responder, Result,
-};
-use actix_web_lab::extract::Path;
-use async_stream::stream;
+mod redis_connection;
+use redis_connection::redis_connection::create_client as redis_client;
 
-// NOTE: Not a suitable session key for production.
-static SESSION_SIGNING_KEY: &[u8] = &[0; 64];
-
-/// simple index handler
-#[get("/welcome")]
-async fn welcome(req: HttpRequest, session: Session) -> Result<HttpResponse> {
-    println!("{req:?}");
-
-    // session
-    let mut counter = 1;
-    if let Some(count) = session.get::<i32>("counter")? {
-        println!("SESSION value: {count}");
-        counter = count + 1;
-    }
-
-    // set counter to session
-    session.insert("counter", counter)?;
-
-    // response
-    Ok(HttpResponse::build(StatusCode::OK)
-        .content_type(ContentType::plaintext())
-        .body(include_str!("../static/welcome.html")))
+#[derive(Serialize)]
+struct ErrorHTTPException {
+    status_code: u16,
+    error_code: u16,
+    detail: String,
 }
 
-async fn default_handler(req_method: Method) -> Result<impl Responder> {
-    match req_method {
-        Method::GET => {
-            let file = NamedFile::open("static/404.html")?
-                .customize()
-                .with_status(StatusCode::NOT_FOUND);
-            Ok(Either::Left(file))
+#[derive(Serialize, Deserialize, Clone)]
+struct Meta {
+    name: String,
+}
+
+#[derive(Serialize, Deserialize, Clone)]
+struct Item {
+    id: String,
+    data: serde_json::Value,
+    meta: Meta,
+}
+
+#[derive(Serialize, Deserialize)]
+struct Lootbox {
+    id: String,
+    items: Vec<Item>,
+    draws_count: Option<i32>,
+    is_active: bool,
+}
+
+#[derive(Serialize, Deserialize, Clone)]
+struct WeightedItem {
+    id: String,
+    data: serde_json::Value,
+    meta: Meta,
+    weight: u16,
+}
+
+#[derive(Serialize, Deserialize)]
+struct WeightedLootbox {
+    id: String,
+    items: Vec<WeightedItem>,
+    draws_count: Option<i32>,
+    is_active: bool,
+}
+
+#[derive(Deserialize)]
+struct CreateLootboxRequest {
+    items: Vec<serde_json::Value>,
+    draws_count: Option<i32>,
+}
+
+const WRONG_LOOTBOX_TYPE: u16 = 1005;
+
+async fn create_lootbox(
+    data: web::Json<CreateLootboxRequest>,
+    redis: web::Data<redis::Client>,
+) -> Result<HttpResponse> {
+    let mut conn = redis.get_async_connection().await.map_err(error::ErrorInternalServerError)?;
+    
+    let lootbox_items: Vec<Item> = data.items.iter().map(|item| {
+        Item {
+            id: Uuid::new_v4().to_string(),
+            data: item.get("data").cloned().unwrap_or_default(),
+            meta: Meta {
+                name: item.get("meta").and_then(|m| m.get("name")).and_then(|n| n.as_str()).unwrap_or("").to_string(),
+            },
         }
-        _ => Ok(Either::Right(HttpResponse::MethodNotAllowed().finish())),
+    }).collect();
+
+    let lootbox_id = Uuid::new_v4().to_string();
+    let lootbox = Lootbox {
+        id: lootbox_id.clone(),
+        items: lootbox_items,
+        draws_count: data.draws_count,
+        is_active: true,
+    };
+
+    let lootbox_json = serde_json::to_string(&lootbox)?;
+    conn.set(&lootbox_id, &lootbox_json).await.map_err(error::ErrorInternalServerError)?;
+
+    Ok(HttpResponse::Ok().json(lootbox))
+}
+
+async fn get_loot(
+    lootbox_id: web::Path<String>,
+    redis: web::Data<redis::Client>,
+) -> Result<HttpResponse> {
+    let mut conn = redis.get_async_connection().await.map_err(error::ErrorInternalServerError)?;
+
+    let lootbox_data: Option<String> = conn.get(&*lootbox_id).await.map_err(error::ErrorInternalServerError)?;
+
+    let lootbox: Lootbox = match lootbox_data {
+        Some(data) => serde_json::from_str(&data)?,
+        None => return Ok(HttpResponse::BadRequest().json(ErrorHTTPException {
+            status_code: 400,
+            error_code: 1001,
+            detail: "Lootbox not found".to_string(),
+        })),
+    };
+
+    if !lootbox.is_active {
+        return Ok(HttpResponse::BadRequest().json(ErrorHTTPException {
+            status_code: 400,
+            error_code: 1003,
+            detail: "Lootbox is not active".to_string(),
+        }));
     }
-}
 
-async fn streaming_response(path: web::Path<String>) -> HttpResponse {
-    let name = path.into_inner();
+    if lootbox.items.is_empty() {
+        return Ok(HttpResponse::BadRequest().json(ErrorHTTPException {
+            status_code: 400,
+            error_code: 1004,
+            detail: "No items in lootbox".to_string(),
+        }));
+    }
 
-    HttpResponse::Ok()
-        .content_type(ContentType::plaintext())
-        .streaming(stream! {
-            yield Ok::<_, Infallible>(web::Bytes::from("Hello "));
-            yield Ok::<_, Infallible>(web::Bytes::from(name));
-            yield Ok::<_, Infallible>(web::Bytes::from("!"));
-        })
-}
+    let drawed_item = lootbox.items.choose(&mut rand::thread_rng()).unwrap();
 
-/// handler with path parameters like `/user/{name}`
-async fn with_param(req: HttpRequest, Path((name,)): Path<(String,)>) -> HttpResponse {
-    println!("{req:?}");
-
-    HttpResponse::Ok()
-        .content_type(ContentType::plaintext())
-        .body(format!("Hello {name}!"))
+    Ok(HttpResponse::Ok().json(drawed_item))
 }
 
 #[actix_web::main]
-async fn main() -> io::Result<()> {
-    env_logger::init_from_env(env_logger::Env::new().default_filter_or("info"));
-
-    // random key means that restarting server will invalidate existing session cookies
-    let key = actix_web::cookie::Key::from(SESSION_SIGNING_KEY);
-
-    log::info!("starting HTTP server at http://localhost:8080");
+async fn main() -> std::io::Result<()> {
+    dotenv().ok();
+    let redis_client = redis_client().expect("Failed to create Redis client");
 
     HttpServer::new(move || {
         App::new()
-            // enable automatic response compression - usually register this first
-            .wrap(middleware::Compress::default())
-            // cookie session middleware
-            .wrap(
-                SessionMiddleware::builder(CookieSessionStore::default(), key.clone())
-                    .cookie_secure(false)
-                    .build(),
-            )
-            // enable logger - always register Actix Web Logger middleware last
-            .wrap(middleware::Logger::default())
-            // register simple route, handle all methods
-            .service(welcome)
-            // with path parameters
-            .service(web::resource("/user/{name}").route(web::get().to(with_param)))
-            // async response body
-            .service(web::resource("/async-body/{name}").route(web::get().to(streaming_response)))
-            .service(
-                web::resource("/test").to(|req: HttpRequest| match *req.method() {
-                    Method::GET => HttpResponse::Ok(),
-                    Method::POST => HttpResponse::MethodNotAllowed(),
-                    _ => HttpResponse::NotFound(),
-                }),
-            )
-            .service(web::resource("/error").to(|| async {
-                error::InternalError::new(
-                    io::Error::new(io::ErrorKind::Other, "test"),
-                    StatusCode::INTERNAL_SERVER_ERROR,
-                )
-            }))
-            // static files
-            .service(Files::new("/static", "static").show_files_listing())
-            // redirect
-            .service(
-                web::resource("/").route(web::get().to(|req: HttpRequest| async move {
-                    println!("{req:?}");
-                    HttpResponse::Found()
-                        .insert_header((header::LOCATION, "static/welcome.html"))
-                        .finish()
-                })),
-            )
-            // default
-            .default_service(web::to(default_handler))
+            .app_data(web::Data::new(redis_client.clone()))
+            .route("/create_lootbox", web::post().to(create_lootbox))
+            .route("/get_loot/{lootbox_id}", web::get().to(get_loot))
     })
-    .bind(("0.0.0.0", 8080))?
-    .workers(2)
+    .bind("127.0.0.1:8080")?
     .run()
     .await
 }
