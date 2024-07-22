@@ -8,6 +8,8 @@ mod lootbox {
     pub mod equal_handlers;
     pub mod weighted_handlers;
     pub mod weighted_random;
+    pub mod exclusive_handlers;
+    pub mod constants;
 }
 
 use redis_connection::redis_connection::create_client as redis_client;
@@ -29,6 +31,11 @@ async fn main() -> std::io::Result<()> {
                 web::scope("weighted")
                 .route("/create_lootbox", web::post().to(lootbox::weighted_handlers::create_lootbox))
                 .route("/get_loot/{lootbox_id}", web::get().to(lootbox::weighted_handlers::get_loot))
+            )
+            .service(
+                web::scope("exclusive")
+                .route("/create_lootbox", web::post().to(lootbox::exclusive_handlers::create_lootbox))
+                .route("/get_loot/{lootbox_id}", web::get().to(lootbox::exclusive_handlers::get_loot))
             )
     })
     .bind("127.0.0.1:8080")?

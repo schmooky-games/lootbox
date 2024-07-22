@@ -27,5 +27,5 @@ pub fn weighted_random(items: &Vec<WeightedItem>, weights: &Vec<i32>) -> Option<
     let random_value = rng.gen_range(0..=total);
     let index = bisect_right(&cumulative_weights, random_value);
 
-    items.get(index).cloned() // Возвращаем клонированный элемент
+    items.get(index).cloned()
 }

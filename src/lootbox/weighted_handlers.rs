@@ -5,6 +5,7 @@ use cuid2;
 use crate::lootbox::models::{WeightedItem, WeightedLootbox, Meta, CreateWeightedLootboxRequest};
 use crate::error::ErrorHTTPException;
 
+use super::constants::{EMPTY_LOOTBOX, LOOTBOX_NOT_ACTIVE, LOOTBOX_NOT_FOUND};
 use super::models::WeightedItemRequest;
 use super::weighted_random::weighted_random;
 
@@ -51,7 +52,7 @@ pub async fn get_loot(
         Some(data) => serde_json::from_str(&data)?,
         None => return Ok(HttpResponse::BadRequest().json(ErrorHTTPException {
             status_code: 400,
-            error_code: 1001,
+            error_code: LOOTBOX_NOT_FOUND,
             detail: "Lootbox not found".to_string(),
         })),
     };
@@ -59,7 +60,7 @@ pub async fn get_loot(
     if !lootbox.is_active {
         return Ok(HttpResponse::BadRequest().json(ErrorHTTPException {
             status_code: 400,
-            error_code: 1003,
+            error_code: LOOTBOX_NOT_ACTIVE,
             detail: "Lootbox is not active".to_string(),
         }));
     }
@@ -67,13 +68,13 @@ pub async fn get_loot(
     if lootbox.items.is_empty() {
         return Ok(HttpResponse::BadRequest().json(ErrorHTTPException {
             status_code: 400,
-            error_code: 1004,
+            error_code: EMPTY_LOOTBOX,
             detail: "No items in lootbox".to_string(),
         }));
     }
 
     let weights: Vec<i32> = lootbox.items.iter().map(|item| item.weight as i32).collect();
-    let drawed_item = weighted_random(&lootbox.items, &weights);
+    let drawn_item = weighted_random(&lootbox.items, &weights);
 
-    Ok(HttpResponse::Ok().json(drawed_item))
+    Ok(HttpResponse::Ok().json(drawn_item))
 }
