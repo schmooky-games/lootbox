@@ -1,8 +1,9 @@
-use actix_web::{web, HttpResponse, Result, error};
+use actix_web::{web, HttpResponse, Result};
 use rand::seq::SliceRandom;
 use rand::rngs::OsRng;
-use redis::AsyncCommands;
-use cuid2;
+use bb8::Pool;
+use bb8_redis::RedisConnectionManager;
+use redis::AsyncCommands; 
 
 use crate::lootbox::models::{Lootbox, Item, Meta, CreateLootboxRequest};
 use crate::error::ErrorHTTPException;
@@ -11,10 +12,10 @@ use super::constants::{LOOTBOX_NOT_ACTIVE, LOOTBOX_NOT_FOUND, EMPTY_LOOTBOX};
 
 pub async fn create_lootbox(
     data: web::Json<CreateLootboxRequest>,
-    redis: web::Data<redis::Client>,
+    pool: web::Data<Pool<RedisConnectionManager>>,
 ) -> Result<HttpResponse> {
-    let mut conn = redis.get_async_connection().await.map_err(actix_web::error::ErrorInternalServerError)?;
-    
+    let mut conn = pool.get().await.map_err(actix_web::error::ErrorInternalServerError)?;
+
     let lootbox_items: Vec<Item> = data.items.iter().map(|item| {
         Item {
             id: cuid2::create_id(),
@@ -41,11 +42,12 @@ pub async fn create_lootbox(
 
 pub async fn get_loot(
     lootbox_id: web::Path<String>,
-    redis: web::Data<redis::Client>,
+    pool: web::Data<Pool<RedisConnectionManager>>,
 ) -> Result<HttpResponse> {
-    let mut conn = redis.get_async_connection().await.map_err(error::ErrorInternalServerError)?;
+    // Получение подключения из пула
+    let mut conn = pool.get().await.map_err(actix_web::error::ErrorInternalServerError)?;
 
-    let lootbox_data: Option<String> = conn.get(&*lootbox_id).await.map_err(error::ErrorInternalServerError)?;
+    let lootbox_data: Option<String> = conn.get(&*lootbox_id).await.map_err(actix_web::error::ErrorInternalServerError)?;
 
     let lootbox: Lootbox = match lootbox_data {
         Some(data) => serde_json::from_str(&data)?,

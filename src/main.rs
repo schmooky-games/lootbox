@@ -13,18 +13,17 @@ mod lootbox {
     pub mod constants;
 }
 
-use redis_connection::redis_connection::create_client as redis_client;
-use healthchecks::ping_redis as redis_healthcheck;
+use healthchecks::redis_status as redis_healthcheck;
+use redis_connection::create_pool as redis_pool;
 
 #[actix_web::main]
 async fn main() -> std::io::Result<()> {
     dotenv().ok();
-    let redis_client = redis_client().await.expect("Failed to create Redis client");
-    let redis_data = web::Data::new(redis_client);
+    let pool = redis_pool().await.expect("Failed to create Redis pool");
 
     HttpServer::new(move || {
         App::new()
-            .app_data(redis_data.clone())
+            .app_data(web::Data::new(pool.clone()))
             .service(redis_healthcheck)
             .service(
                 web::scope("equal")

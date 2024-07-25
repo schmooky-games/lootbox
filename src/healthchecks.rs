@@ -1,49 +1,44 @@
 use actix_web::{web, HttpResponse};
-use redis::Client;
+use bb8::Pool;
+use bb8_redis::{
+    bb8,
+    redis::cmd,
+    RedisConnectionManager
+};
 use serde_json::json;
 
 #[actix_web::get("/health/redis")]
-async fn ping_redis(client: web::Data<Client>) -> HttpResponse {
-    match client.get_async_connection().await {
-        Ok(mut con) => {
-            let ping_result = redis::cmd("PING").query_async::<_, String>(&mut con).await;
-            let info_result: redis::RedisResult<String> = redis::cmd("INFO").query_async(&mut con).await;
+pub async fn redis_status(pool: web::Data<Pool<RedisConnectionManager>>) -> actix_web::HttpResponse {
+    let mut conn = match pool.get().await {
+        Ok(conn) => conn,
+        Err(e) => {
+            return HttpResponse::InternalServerError().json(json!({
+                "status": "error",
+                "message": format!("Failed to get Redis connection from pool: {}", e)
+            }));
+        }
+    };
 
-            match (ping_result, info_result) {
-                (Ok(pong), Ok(info)) => {
-                    let info_map: std::collections::HashMap<String, String> = info
-                        .lines()
-                        .filter(|line| line.contains(':'))
-                        .map(|line| {
-                            let mut parts = line.splitn(2, ':');
-                            (parts.next().unwrap().to_string(), parts.next().unwrap().to_string())
-                        })
-                        .collect();
+    let ping_result: String = cmd("PING").query_async(&mut *conn).await.unwrap();
+    let info_result: String = cmd("INFO").query_async(&mut *conn).await.unwrap();
 
-                    let response = json!({
-                        "status": "healthy",
-                        "ping": pong,
-                        "version": info_map.get("redis_version").cloned().unwrap_or_default(),
-                        "uptime_in_seconds": info_map.get("uptime_in_seconds").cloned().unwrap_or_default(),
-                        "connected_clients": info_map.get("connected_clients").cloned().unwrap_or_default(),
-                        "used_memory": info_map.get("used_memory_human").cloned().unwrap_or_default(),
-                    });
+    let info_map: std::collections::HashMap<String, String> = info_result
+        .lines()
+        .filter(|line| line.contains(':'))
+        .map(|line| {
+            let mut parts = line.splitn(2, ':');
+            (parts.next().unwrap_or_default().to_string(), parts.next().unwrap_or_default().to_string())
+        })
+        .collect();
 
-                    HttpResponse::Ok().json(response)
-                },
-                (Err(e), _) => HttpResponse::InternalServerError().json(json!({
-                    "status": "error",
-                    "message": format!("Redis ping error: {}", e)
-                })),
-                (_, Err(e)) => HttpResponse::InternalServerError().json(json!({
-                    "status": "error",
-                    "message": format!("Redis info error: {}", e)
-                })),
-            }
-        },
-        Err(e) => HttpResponse::InternalServerError().json(json!({
-            "status": "error",
-            "message": format!("Redis connection error: {}", e)
-        })),
-    }
+    let response = json!({
+        "status": "healthy",
+        "ping": ping_result,
+        "version": info_map.get("redis_version").cloned().unwrap_or_default(),
+        "uptime_in_seconds": info_map.get("uptime_in_seconds").cloned().unwrap_or_default(),
+        "connected_clients": info_map.get("connected_clients").cloned().unwrap_or_default(),
+        "used_memory": info_map.get("used_memory_human").cloned().unwrap_or_default(),
+    });
+
+    HttpResponse::Ok().json(response)
 }
