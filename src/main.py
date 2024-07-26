@@ -29,8 +29,3 @@ Instrumentator().instrument(app).expose(app)
 _healthChecks = HealthCheckFactory()
 _healthChecks.add(HealthCheckRedis(alias="redis", connection_uri=REDIS_URI, tags=["redis"]))
 app.add_api_route('/health/redis', endpoint=healthCheckRoute(factory=_healthChecks))
-
-
-if __name__ == "__main__":
-    import uvicorn
-    uvicorn.run(app, host="0.0.0.0", port=8000)

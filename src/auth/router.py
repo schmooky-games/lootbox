@@ -15,8 +15,8 @@ router = APIRouter()
 
 
 @router.post("/generate")
-def generate_token():
-    token = generate_jwt_token()
+async def generate_token():
+    token = await generate_jwt_token()
     return {"Token set in redis"}
 
 

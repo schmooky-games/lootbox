@@ -2,23 +2,57 @@ import jwt
 from datetime import timedelta, datetime
 from fastapi import Depends, HTTPException
 from fastapi.security import HTTPBearer
+from typing import Dict
+import time
+from redis.asyncio import Redis
 
 from src.redis_connection import redis
 from src.config import SECRET_KEY
 
 TOKEN_EXPIRATION = timedelta(hours=1)
+CACHE_CAPACITY = 10000
 
 
-async def verify_token(token: HTTPBearer = Depends(HTTPBearer(auto_error=False))):
+class TokenCache:
+    def __init__(self, capacity: int):
+        self.cache: Dict[str, float] = {}
+        self.capacity = capacity
 
+    def insert(self, token: str, expiration: float):
+        if len(self.cache) >= self.capacity:
+            oldest_token = min(self.cache, key=self.cache.get)
+            del self.cache[oldest_token]
+        self.cache[token] = expiration
+
+    def contains(self, token: str) -> bool:
+        if token in self.cache:
+            if self.cache[token] > time.time():
+                return True
+            del self.cache[token]
+        return False
+
+
+token_cache = TokenCache(CACHE_CAPACITY)
+
+
+async def verify_token(
+        token: HTTPBearer = Depends(HTTPBearer(auto_error=False)),
+        redis: Redis = Depends(lambda: redis)
+):
     if not token:
         raise HTTPException(status_code=401, detail="Not authorized")
 
-    token_exists = await redis.exists(f"token:{token.credentials}")
-    if not token_exists:
+    if token_cache.contains(token.credentials):
+        return token.credentials
+
+    token_key = f"token:{token.credentials}"
+    token_ttl = await redis.ttl(token_key)
+
+    if token_ttl <= 0:
         raise HTTPException(status_code=401, detail="Invalid token")
 
-    await redis.expire(f"token:{token.credentials}", int(TOKEN_EXPIRATION.total_seconds()))
+    expiration = time.time() + token_ttl
+    token_cache.insert(token.credentials, expiration)
 
     return token.credentials
 
