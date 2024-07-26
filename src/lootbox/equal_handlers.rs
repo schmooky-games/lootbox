@@ -12,9 +12,9 @@ use super::constants::{LOOTBOX_NOT_ACTIVE, LOOTBOX_NOT_FOUND, EMPTY_LOOTBOX};
 
 pub async fn create_lootbox(
     data: web::Json<CreateLootboxRequest>,
-    pool: web::Data<Pool<RedisConnectionManager>>,
+    redis: web::Data<Pool<RedisConnectionManager>>,
 ) -> Result<HttpResponse> {
-    let mut conn = pool.get().await.map_err(actix_web::error::ErrorInternalServerError)?;
+    let mut conn = redis.get().await.map_err(actix_web::error::ErrorInternalServerError)?;
 
     let lootbox_items: Vec<Item> = data.items.iter().map(|item| {
         Item {
@@ -42,10 +42,9 @@ pub async fn create_lootbox(
 
 pub async fn get_loot(
     lootbox_id: web::Path<String>,
-    pool: web::Data<Pool<RedisConnectionManager>>,
+    redis: web::Data<Pool<RedisConnectionManager>>,
 ) -> Result<HttpResponse> {
-    // Получение подключения из пула
-    let mut conn = pool.get().await.map_err(actix_web::error::ErrorInternalServerError)?;
+    let mut conn = redis.get().await.map_err(actix_web::error::ErrorInternalServerError)?;
 
     let lootbox_data: Option<String> = conn.get(&*lootbox_id).await.map_err(actix_web::error::ErrorInternalServerError)?;
 

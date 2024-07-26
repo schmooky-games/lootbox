@@ -1,5 +1,7 @@
 use actix_web::{web, HttpResponse, Result, error};
 use redis::AsyncCommands;
+use bb8::Pool;
+use bb8_redis::RedisConnectionManager;
 use cuid2;
 
 use crate::lootbox::models::{WeightedItem, WeightedLootbox, Meta, CreateWeightedLootboxRequest};
@@ -11,9 +13,9 @@ use super::weighted_random::weighted_random;
 
 pub async fn create_lootbox(
     data: web::Json<CreateWeightedLootboxRequest>,
-    redis: web::Data<redis::Client>,
+    redis: web::Data<Pool<RedisConnectionManager>>,
 ) -> Result<HttpResponse> {
-    let mut conn = redis.get_async_connection().await.map_err(actix_web::error::ErrorInternalServerError)?;
+    let mut conn = redis.get().await.map_err(actix_web::error::ErrorInternalServerError)?;
     
     let lootbox_items: Vec<WeightedItem> = data.items.iter().map(|item: &WeightedItemRequest| {
         WeightedItem {
@@ -42,9 +44,9 @@ pub async fn create_lootbox(
 
 pub async fn get_loot(
     lootbox_id: web::Path<String>,
-    redis: web::Data<redis::Client>,
+    redis: web::Data<Pool<RedisConnectionManager>>,
 ) -> Result<HttpResponse> {
-    let mut conn = redis.get_async_connection().await.map_err(error::ErrorInternalServerError)?;
+    let mut conn = redis.get().await.map_err(error::ErrorInternalServerError)?;
 
     let lootbox_data: Option<String> = conn.get(&*lootbox_id).await.map_err(error::ErrorInternalServerError)?;
 
