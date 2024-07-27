@@ -11,18 +11,33 @@ from src.lootboxes.weighted.router import router as weighted_lootbox_router
 from src.lootboxes.exclusive.router import router as exclusive_lootbox_router
 from src.auth.router import router as auth_router, verify_token
 
-app = FastAPI(docs_url="/api")
+tags_metadata = [
+    {
+        "name": "equal",
+        "description": "Operations with equal lootboxes",
+    },
+    {
+        "name": "weighted",
+        "description": "Operations with weighted lootboxes",
+    },
+{
+        "name": "exclusive",
+        "description": "Operations with exclusive lootboxes",
+    },
+]
+
+app = FastAPI(docs_url="/api", openapi_tags=tags_metadata)
 
 setup_error_handlers(app)
 
-app.include_router(auth_router, prefix="/auth", tags=["auth"])
-app.include_router(general_router, prefix="", tags=["general methods"], dependencies=[Depends(verify_token)])
+# app.include_router(auth_router, prefix="/auth", tags=["auth"])
+app.include_router(general_router, prefix="", tags=["general methods"])
 app.include_router(equal_lootbox_router, prefix="/equal", tags=["equal lootboxes"]
-                   , dependencies=[Depends(verify_token)])
+                   )
 app.include_router(weighted_lootbox_router, prefix="/weighted", tags=["weighted lootboxes"]
-                   , dependencies=[Depends(verify_token)])
+                   )
 app.include_router(exclusive_lootbox_router, prefix="/exclusive", tags=["exclusive lootboxes"]
-                   , dependencies=[Depends(verify_token)])
+                   )
 
 Instrumentator().instrument(app).expose(app)
 

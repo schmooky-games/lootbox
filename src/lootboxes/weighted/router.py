@@ -11,7 +11,7 @@ from src.redis_connection import redis
 router = APIRouter()
 
 
-@router.post("/create_lootbox", response_model=Lootbox)
+@router.post("/create_lootbox", response_model=Lootbox, tags=["weighted"])
 async def create_lootbox(items: List[Dict[str, Union[Any, float]]], draws_count: Optional[int] = None):
     lootbox_items = [
         WeightedItem(
@@ -28,7 +28,7 @@ async def create_lootbox(items: List[Dict[str, Union[Any, float]]], draws_count:
     return lootbox
 
 
-@router.get("/get_loot/{lootbox_id}", response_model=WeightedItem)
+@router.get("/get_loot/{lootbox_id}", response_model=WeightedItem, tags=["weighted"])
 async def get_loot(lootbox_id: str):
     lootbox_data = await redis.get(lootbox_id)
 
