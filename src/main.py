@@ -14,16 +14,20 @@ from src.auth.router import router as auth_router, verify_token
 tags_metadata = [
     {
         "name": "equal",
-        "description": "Operations with equal lootboxes",
+        "description": "Operations with equal lootboxes"
     },
     {
         "name": "weighted",
-        "description": "Operations with weighted lootboxes",
+        "description": "Operations with weighted lootboxes"
     },
-{
+    {
         "name": "exclusive",
-        "description": "Operations with exclusive lootboxes",
+        "description": "Operations with exclusive lootboxes"
     },
+    {
+        "name": "redis",
+        "description": "Redis healthcheck"
+    }
 ]
 
 app = FastAPI(docs_url="/api", openapi_tags=tags_metadata)
@@ -32,11 +36,11 @@ setup_error_handlers(app)
 
 # app.include_router(auth_router, prefix="/auth", tags=["auth"])
 app.include_router(general_router, prefix="", tags=["general methods"])
-app.include_router(equal_lootbox_router, prefix="/equal", tags=["equal lootboxes"]
+app.include_router(equal_lootbox_router, prefix="/equal", tags=["equal"]
                    )
-app.include_router(weighted_lootbox_router, prefix="/weighted", tags=["weighted lootboxes"]
+app.include_router(weighted_lootbox_router, prefix="/weighted", tags=["weighted"]
                    )
-app.include_router(exclusive_lootbox_router, prefix="/exclusive", tags=["exclusive lootboxes"]
+app.include_router(exclusive_lootbox_router, prefix="/exclusive", tags=["exclusive"]
                    )
 
 Instrumentator().instrument(app).expose(app)

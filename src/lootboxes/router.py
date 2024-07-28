@@ -9,7 +9,8 @@ from src.redis_connection import redis
 router = APIRouter()
 
 
-@router.get("/lootbox/{lootbox_id}", response_model=Lootbox)
+@router.get("/lootbox/{lootbox_id}", response_model=Lootbox, operation_id="get_lootbox",
+            summary="Get lootbox by id")
 async def get_lootbox(lootbox_id: str):
     lootbox_data = await redis.get(lootbox_id)
 
@@ -20,7 +21,8 @@ async def get_lootbox(lootbox_id: str):
     return lootbox
 
 
-@router.post("/deactivate_lootbox/{lootbox_id}", response_model=Lootbox)
+@router.post("/deactivate_lootbox/{lootbox_id}", response_model=Lootbox, operation_id="deactivate_lootbox",
+             summary="Deactivate lootbox by id")
 async def deactivate_lootbox(lootbox_id: str):
     lootbox_data = await redis.get(lootbox_id)
 
