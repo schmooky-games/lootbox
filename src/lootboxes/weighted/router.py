@@ -5,8 +5,9 @@ from src.lootboxes.weighted.utils import weighted_random
 from src.exceptions import ErrorHTTPException
 from src.lootboxes.constants import WRONG_LOOTBOX_TYPE
 from src.lootboxes.schemas import Lootbox, WeightedItem, Meta
-from src.lootboxes.utils import CUID_GENERATOR
+from src.lootboxes.utils import CUID_GENERATOR, SimpleCache
 from src.redis_connection import redis
+
 
 router = APIRouter()
 
@@ -29,10 +30,13 @@ async def create_lootbox(items: List[Dict[str, Union[Any, float]]], draws_count:
     return lootbox
 
 
+lootbox_cache = SimpleCache(maxsize=1000)
+
+
 @router.get("/get_loot/{lootbox_id}", response_model=WeightedItem, operation_id="get_loot_from_weighted_lootbox",
             summary="Get loot from weighted lootbox")
 async def get_loot(lootbox_id: str):
-    lootbox_data = await redis.get(lootbox_id)
+    lootbox_data = await lootbox_cache.get(lootbox_id)
 
     if not lootbox_data:
         raise ErrorHTTPException(status_code=400, error_code=1001, detail="Lootbox not found")

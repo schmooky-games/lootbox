@@ -1,4 +1,4 @@
-from fastapi import FastAPI, Depends
+from fastapi import FastAPI
 from prometheus_fastapi_instrumentator import Instrumentator
 from fastapi_healthcheck import HealthCheckFactory, healthCheckRoute
 from healthchecks.redis_healthcheck import HealthCheckRedis
