@@ -1,7 +1,7 @@
 FROM python:3.11
 
 ARG REDIS_URI
-ENV REDIS_UR =$REDIS_URI
+ENV REDIS_URI=$REDIS_URI
 
 RUN mkdir /lootbox_service
 
