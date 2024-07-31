@@ -4,13 +4,8 @@ from collections import defaultdict
 from httpx import AsyncClient
 import pytest_asyncio
 
-from src.config import TEMP_TOKEN
 from src.main import app
 from src.redis_connection import redis
-
-headers = {
-    "Authorization": f"Bearer {TEMP_TOKEN}"
-}
 
 
 @pytest_asyncio.fixture
@@ -28,7 +23,7 @@ async def setup_lootbox(async_client):
         {"data": {"value": "item4"}, "meta": {"name": "Item 4"}, "weight": "50"},
         {"data": {"value": "item5"}, "meta": {"name": "Item 5"}, "weight": "50"}
     ]
-    response = await async_client.post("/weighted/create_lootbox", json=payload, headers=headers)
+    response = await async_client.post("/weighted/create_lootbox", json=payload)
     assert response.status_code == 200
     lootbox = response.json()
 
@@ -49,7 +44,7 @@ async def test_get_loot_randomness(async_client, setup_lootbox):
     item_counts = defaultdict(int)
 
     for _ in range(num_tests):
-        response = await async_client.get(f"/weighted/get_loot/{lootbox_id}", headers=headers)
+        response = await async_client.get(f"/weighted/get_loot/{lootbox_id}")
         assert response.status_code == 200
         item = response.json()
 

@@ -5,7 +5,7 @@ from src.lootboxes.weighted.utils import weighted_random
 from src.exceptions import ErrorHTTPException
 from src.lootboxes.constants import WRONG_LOOTBOX_TYPE
 from src.lootboxes.schemas import Lootbox, WeightedItem, Meta
-from src.lootboxes.utils import CUID_GENERATOR, SimpleCache
+from src.lootboxes.utils import CUID_GENERATOR, AsyncCache
 from src.redis_connection import redis
 
 
@@ -30,7 +30,7 @@ async def create_lootbox(items: List[Dict[str, Union[Any, float]]], draws_count:
     return lootbox
 
 
-lootbox_cache = SimpleCache(maxsize=1000)
+lootbox_cache = AsyncCache(maxsize=1000)
 
 
 @router.get("/get_loot/{lootbox_id}", response_model=WeightedItem, operation_id="get_loot_from_weighted_lootbox",

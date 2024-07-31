@@ -4,7 +4,7 @@ from typing import List, Dict, Any, Optional
 from src.exceptions import ErrorHTTPException
 from src.lootboxes.constants import WRONG_LOOTBOX_TYPE
 from src.lootboxes.schemas import Meta, WeightedItem, Lootbox
-from src.lootboxes.utils import CUID_GENERATOR
+from src.lootboxes.utils import CUID_GENERATOR, AsyncCache
 from src.lootboxes.weighted.utils import weighted_random
 from src.redis_connection import redis
 
@@ -29,10 +29,13 @@ async def create_lootbox(items: List[Dict[str, Any]], draws_count: Optional[int]
     return lootbox
 
 
+lootbox_cache = AsyncCache()
+
+
 @router.get("/get_loot/{lootbox_id}", response_model=WeightedItem, operation_id="get_loot_from_exclusive_box",
             summary="Get loot from weighted lootbox")
 async def get_loot(lootbox_id: str):
-    lootbox_data = await redis.get(lootbox_id)
+    lootbox_data = await lootbox_cache.get(lootbox_id)
 
     if not lootbox_data:
         raise ErrorHTTPException(status_code=400, error_code=1001, detail="Lootbox not found")
@@ -56,6 +59,7 @@ async def get_loot(lootbox_id: str):
     drawed_item = weighted_random(items=lootbox.items, weights=weights)
 
     lootbox.items.remove(drawed_item)
-    await redis.set(lootbox_id, lootbox.model_dump_json())
+    updated_lootbox_data = lootbox.model_dump_json()
+    await lootbox_cache.update(lootbox_id, updated_lootbox_data)
 
     return drawed_item

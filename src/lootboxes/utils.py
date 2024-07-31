@@ -1,3 +1,4 @@
+import copy
 from collections import OrderedDict
 from cuid2 import Cuid
 
@@ -8,7 +9,7 @@ CUID_GENERATOR = Cuid(length=10)
 
 
 # async cache
-class SimpleCache:
+class AsyncCache:
     def __init__(self, maxsize=1000):
         self.cache = OrderedDict()
         self.maxsize = maxsize
@@ -16,10 +17,15 @@ class SimpleCache:
     async def get(self, key):
         if key in self.cache:
             self.cache.move_to_end(key)
-            return self.cache[key]
+            return copy.deepcopy(self.cache[key])
         value = await redis.get(key)
         if value is not None:
             if len(self.cache) >= self.maxsize:
                 self.cache.popitem(last=False)
             self.cache[key] = value
-        return value
+        return copy.deepcopy(value)
+
+    async def update(self, key, value):
+        if key in self.cache:
+            self.cache[key] = value
+        await redis.set(key, value)

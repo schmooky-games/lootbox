@@ -5,7 +5,7 @@ from typing import List, Dict, Any, Optional
 from src.exceptions import ErrorHTTPException
 from src.lootboxes.constants import WRONG_LOOTBOX_TYPE
 from src.lootboxes.schemas import Meta, Item, Lootbox
-from src.lootboxes.utils import CUID_GENERATOR, SimpleCache
+from src.lootboxes.utils import CUID_GENERATOR, AsyncCache
 from src.redis_connection import redis
 
 router = APIRouter()
@@ -28,7 +28,7 @@ async def create_lootbox(items: List[Dict[str, Any]], draws_count: Optional[int]
     return lootbox
 
 
-lootbox_cache = SimpleCache(maxsize=1000)
+lootbox_cache = AsyncCache(maxsize=1000)
 
 
 @router.get("/get_loot/{lootbox_id}", response_model=Item, operation_id="get_loot_from_equal_lootbox",
