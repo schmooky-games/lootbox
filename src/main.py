@@ -1,3 +1,5 @@
+import uvloop
+uvloop.install()
 from fastapi import FastAPI
 from prometheus_fastapi_instrumentator import Instrumentator
 from fastapi_healthcheck import HealthCheckFactory, healthCheckRoute
@@ -26,7 +28,7 @@ tags_metadata = [
     }
 ]
 
-app = FastAPI(docs_url="/api", openapi_tags=tags_metadata)
+app = FastAPI(docs_url="/api", openapi_tags=tags_metadata, swagger_ui_parameters={"syntaxHighlight.theme": "obsidian"})
 
 setup_error_handlers(app)
 

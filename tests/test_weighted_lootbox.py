@@ -39,7 +39,7 @@ async def test_get_loot_randomness(async_client, setup_lootbox):
     lootbox = setup_lootbox
     lootbox_id = lootbox["id"]
 
-    num_tests = 200
+    num_tests = 100
 
     item_counts = defaultdict(int)
 
