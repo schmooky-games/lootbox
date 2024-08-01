@@ -12,7 +12,7 @@ router = APIRouter()
 
 
 @router.post("/create_lootbox", response_model=Lootbox, operation_id="create_exclusive_lootbox",
-             summary="Crate exclusive lootbox")
+             summary="Create exclusive lootbox")
 async def create_lootbox(items: List[Dict[str, Any]], draws_count: Optional[int] = None):
     lootbox_items = [
         WeightedItem(
