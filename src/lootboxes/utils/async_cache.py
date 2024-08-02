@@ -1,14 +1,9 @@
 import copy
 from collections import OrderedDict
-from cuid2 import Cuid
 
 from src.redis_connection import redis
 
-# CUID generator
-CUID_GENERATOR = Cuid(length=10)
 
-
-# async cache
 class AsyncCache:
     def __init__(self, maxsize=1000):
         self.cache = OrderedDict()
