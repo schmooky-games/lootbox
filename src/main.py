@@ -4,6 +4,7 @@ from fastapi import FastAPI
 from prometheus_fastapi_instrumentator import Instrumentator
 from fastapi_healthcheck import HealthCheckFactory, healthCheckRoute
 from healthchecks.redis_healthcheck import HealthCheckRedis
+from fastapi.middleware.cors import CORSMiddleware
 
 from src.config import REDIS_URI
 from src.error_handlers import setup_error_handlers
@@ -29,6 +30,18 @@ tags_metadata = [
 ]
 
 app = FastAPI(docs_url="/api", openapi_tags=tags_metadata, swagger_ui_parameters={"syntaxHighlight.theme": "obsidian"})
+
+origins = [
+    "https://lootbox.ddstnd.space"
+]
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=origins,
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
 
 setup_error_handlers(app)
 

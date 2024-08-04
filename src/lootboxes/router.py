@@ -1,11 +1,11 @@
 import json
-from typing import Union
+from typing import Union, List
 
-from fastapi import APIRouter
+from fastapi import APIRouter, Query
 
 from src.exceptions import ErrorHTTPException
 from src.lootboxes.schemas import LootboxTypes, LootboxDeactivate
-from src.lootboxes.constants import LOOTBOX_NOT_FOUND, WRONG_LOOTBOX_TYPE
+from src.lootboxes.constants import LOOTBOX_NOT_FOUND, WRONG_LOOTBOX_TYPE, EMPTY_LOOTBOXES_LIST
 from src.lootboxes.equal.schemas import EqualLootbox
 from src.lootboxes.exclusive.schemas import ExclusiveLootbox
 from src.lootboxes.utils.async_cache import AsyncCache
@@ -74,19 +74,37 @@ async def deactivate_lootbox(lootbox_id: str, update: LootboxDeactivate):
     return updated_lootbox
 
 
-# @router.get("/lootboxes", response_model=Dict[str, Lootbox])
-# def list_lootboxes():
-#     all_keys = redis.keys()
-#     lootboxes_data = {}
-#
-#     if len(all_keys) == 0:
-#         raise ErrorHTTPException(400, EMPTY_LOOTBOXES_LIST, "Lootboxes list is empty")
-#
-#     for key in all_keys:
-#         if not key.decode("utf-8").startswith("token:"):
-#             lootbox_data = redis.get(key)
-#             if lootbox_data:
-#                 lootbox = Lootbox.model_validate_json(lootbox_data)
-#                 lootboxes_data[key.decode("utf-8")] = lootbox
-#
-#     return lootboxes_data
+@router.get("/lootboxes", response_model=List[Union[EqualLootbox, WeightedLootbox, ExclusiveLootbox]])
+async def list_lootboxes(limit: int = Query(default=10, ge=1), offset: int = Query(default=0, ge=0)):
+    cursor = b'0'
+    keys = []
+
+    # Пропускаем ключи до достижения offset
+    while len(keys) < offset:
+        cursor, new_keys = await redis.scan(cursor, count=offset - len(keys))
+        keys.extend(new_keys)
+        if cursor == b'0':
+            break
+
+    # Очищаем список, чтобы оставить только нужное количество ключей
+    keys = keys[offset:]
+
+    # Продолжаем получение ключей до достижения лимита
+    while len(keys) < limit and cursor != b'0':
+        cursor, new_keys = await redis.scan(cursor, count=limit - len(keys))
+        keys.extend(new_keys)
+
+    # Получаем только нужное количество ключей
+    sliced_keys = keys[:limit]
+
+    lootboxes = []
+    for key in sliced_keys:
+        data = await redis.get(key)
+        if data is not None:
+            lootboxes.append(data)
+
+    # Если список lootboxes пуст
+    if len(lootboxes) == 0:
+        raise ErrorHTTPException(status_code=400, error_code=EMPTY_LOOTBOXES_LIST, detail="No lootboxes found")
+
+    return lootboxes
