@@ -6,7 +6,7 @@ from fastapi_healthcheck import HealthCheckFactory, healthCheckRoute
 from healthchecks.redis_healthcheck import HealthCheckRedis
 from fastapi.middleware.cors import CORSMiddleware
 
-from src.config import REDIS_URI
+from src.config import REDIS_URI, FRONT_URL
 from src.error_handlers import setup_error_handlers
 from src.lootboxes.router import router as general_router
 from src.lootboxes.equal.router import router as equal_lootbox_router
@@ -32,7 +32,8 @@ tags_metadata = [
 app = FastAPI(docs_url="/api", openapi_tags=tags_metadata, swagger_ui_parameters={"syntaxHighlight.theme": "obsidian"})
 
 origins = [
-    "https://lootbox.ddstnd.space"
+    "https://lootbox.ddstnd.space",
+    f'{FRONT_URL}',
 ]
 
 app.add_middleware(
