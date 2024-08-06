@@ -18,7 +18,7 @@ router = APIRouter()
 lootbox_cache = AsyncCache(maxsize=1000)
 
 
-@router.get("/lootbox/{lootbox_id}", response_model=Union[EqualLootbox, WeightedLootbox, ExclusiveLootbox],
+@router.get("/lootboxes/{lootbox_id}", response_model=Union[EqualLootbox, WeightedLootbox, ExclusiveLootbox],
             operation_id="get_lootbox",
             summary="Get lootbox by id")
 async def get_lootbox(lootbox_id: str):
@@ -74,37 +74,53 @@ async def deactivate_lootbox(lootbox_id: str, update: LootboxDeactivate):
     return updated_lootbox
 
 
-@router.get("/lootboxes", response_model=List[Union[EqualLootbox, WeightedLootbox, ExclusiveLootbox]])
-async def list_lootboxes(limit: int = Query(default=10, ge=1), offset: int = Query(default=0, ge=0)):
-    cursor = b'0'
-    keys = []
+@router.get("/lootboxes", response_model=List[Union[EqualLootbox, WeightedLootbox, ExclusiveLootbox]],
+            operation_id="get_lootboxes",
+            summary="Get list of lootboxes")
+async def get_lootboxes(
+        limit: int = Query(10, ge=1, le=100),
+        offset: int = Query(0, ge=0)
+):
+    lootboxes = []
+    cursor = 0
 
-    # Пропускаем ключи до достижения offset
-    while len(keys) < offset:
-        cursor, new_keys = await redis.scan(cursor, count=offset - len(keys))
-        keys.extend(new_keys)
-        if cursor == b'0':
+    while len(lootboxes) < limit:
+        cursor, keys = await redis.scan(cursor, count=limit - len(lootboxes))
+
+        for key in keys:
+            if len(lootboxes) >= limit:
+                break
+
+            if offset > 0:
+                offset -= 1
+                continue
+
+            lootbox_data = await lootbox_cache.get(key)
+            if lootbox_data:
+                lootbox_dict = json.loads(lootbox_data)
+                lootbox_type = lootbox_dict.get('type')
+
+                if lootbox_type == LootboxTypes.equal:
+                    lootbox = EqualLootbox(**lootbox_dict)
+                elif lootbox_type == LootboxTypes.weighted:
+                    lootbox = WeightedLootbox(**lootbox_dict)
+                elif lootbox_type == LootboxTypes.exclusive:
+                    lootbox = ExclusiveLootbox(**lootbox_dict)
+                else:
+                    continue
+
+                lootboxes.append(lootbox)
+
+        if cursor == 0:
             break
 
-    # Очищаем список, чтобы оставить только нужное количество ключей
-    keys = keys[offset:]
-
-    # Продолжаем получение ключей до достижения лимита
-    while len(keys) < limit and cursor != b'0':
-        cursor, new_keys = await redis.scan(cursor, count=limit - len(keys))
-        keys.extend(new_keys)
-
-    # Получаем только нужное количество ключей
-    sliced_keys = keys[:limit]
-
-    lootboxes = []
-    for key in sliced_keys:
-        data = await redis.get(key)
-        if data is not None:
-            lootboxes.append(data)
-
-    # Если список lootboxes пуст
     if len(lootboxes) == 0:
-        raise ErrorHTTPException(status_code=400, error_code=EMPTY_LOOTBOXES_LIST, detail="No lootboxes found")
+        return ErrorHTTPException(status_code=400, error_code=EMPTY_LOOTBOXES_LIST, detail="No lootboxes")
 
     return lootboxes
+
+
+@router.get("/lootboxes_total_count")
+async def total_count():
+    lootboxes_count = await redis.dbsize()
+    return {"total_count": lootboxes_count}
