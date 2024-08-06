@@ -1,5 +1,4 @@
 import json
-
 from fastapi import APIRouter
 from typing import List, Dict, Any, Optional, Union
 
@@ -18,7 +17,7 @@ router = APIRouter()
 
 @router.post("/create_lootbox", response_model=WeightedLootbox, operation_id="create_weighted_lootbox",
              summary="Create weighted lootbox")
-async def create_lootbox(items: List[Dict[str, Union[Any, float]]], draws_count: Optional[int] = None):
+async def create_lootbox(items: List[Dict[str, Union[Any, float]]], name: str, draws_count: Optional[int] = None):
     lootbox_items = [
         WeightedItem(
             id=CUID_GENERATOR.generate(),
@@ -29,7 +28,9 @@ async def create_lootbox(items: List[Dict[str, Union[Any, float]]], draws_count:
         for item in items
     ]
     lootbox_id = CUID_GENERATOR.generate()
-    lootbox = WeightedLootbox(id=lootbox_id, items=lootbox_items, draws_count=draws_count, is_active=True)
+    lootbox_meta = Meta(name=name)
+    lootbox = WeightedLootbox(id=lootbox_id, meta=lootbox_meta, items=lootbox_items,
+                              draws_count=draws_count, is_active=True)
     await redis.set(lootbox_id, lootbox.model_dump_json())
     return lootbox
 

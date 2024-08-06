@@ -14,6 +14,7 @@ class WeightedItem(BaseModel):
 
 class WeightedLootbox(BaseModel):
     id: str
+    meta: Meta
     type: LootboxTypes = LootboxTypes.weighted
     items: List[WeightedItem]
     draws_count: Optional[int] = None
@@ -27,5 +28,6 @@ class WeightedItemUpd(BaseModel):
 
 
 class WeightedLootboxUpd(BaseModel):
+    meta: Meta
     items: List[WeightedItemUpd]
     draws_count: Optional[int] = None

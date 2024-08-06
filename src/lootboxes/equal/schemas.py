@@ -13,6 +13,7 @@ class EqualItem(BaseModel):
 
 class EqualLootbox(BaseModel):
     id: str
+    meta: Meta
     type: LootboxTypes = LootboxTypes.equal
     items: List[EqualItem]
     draws_count: Optional[int] = None
@@ -25,6 +26,7 @@ class EqualItemUpd(BaseModel):
 
 
 class EqualLootboxUpd(BaseModel):
+    meta: Meta
     items: List[EqualItemUpd]
     draws_count: Optional[int] = None
 

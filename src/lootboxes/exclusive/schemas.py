@@ -1,5 +1,3 @@
-import uuid
-
 from pydantic import BaseModel, Field
 from typing import List, Dict, Any, Optional
 
@@ -16,6 +14,7 @@ class ExclusiveItem(BaseModel):
 
 class ExclusiveLootbox(BaseModel):
     id: str
+    meta: Meta
     type: LootboxTypes = LootboxTypes.exclusive
     items: List[ExclusiveItem]
     draws_count: Optional[int] = None
@@ -29,5 +28,6 @@ class ExclusiveItemUpd(BaseModel):
 
 
 class ExclusiveLootboxUpd(BaseModel):
+    meta: Meta
     items: List[ExclusiveItem]
     draws_count: Optional[int] = None

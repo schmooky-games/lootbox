@@ -16,7 +16,7 @@ router = APIRouter()
 
 @router.post("/create_lootbox", response_model=EqualLootbox, operation_id="create_equal_lootbox",
              summary="Create equal lootbox")
-async def create_lootbox(items: List[Dict[str, Any]], draws_count: Optional[int] = None):
+async def create_lootbox(items: List[Dict[str, Any]], name: str, draws_count: Optional[int] = None):
     lootbox_items = [
         EqualItem(
             id=CUID_GENERATOR.generate(),
@@ -26,7 +26,9 @@ async def create_lootbox(items: List[Dict[str, Any]], draws_count: Optional[int]
         for item in items
     ]
     lootbox_id = CUID_GENERATOR.generate()
-    lootbox = EqualLootbox(id=lootbox_id, items=lootbox_items, draws_count=draws_count, is_active=True)
+    lootbox_meta = Meta(name=name)
+    lootbox = EqualLootbox(id=lootbox_id, meta=lootbox_meta, items=lootbox_items,
+                           draws_count=draws_count, is_active=True)
     await redis.set(lootbox_id, lootbox.model_dump_json())
     return lootbox
 

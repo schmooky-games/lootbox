@@ -1,9 +1,6 @@
 import json
-
 from fastapi import APIRouter
 from typing import List, Dict, Any, Optional
-
-from pydantic import BaseModel, field_validator
 
 from src.exceptions import ErrorHTTPException
 from src.lootboxes.constants import WRONG_LOOTBOX_TYPE, LOOTBOX_NOT_FOUND, EMPTY_LOOTBOX, LOOTBOX_NOT_ACTIVE
@@ -19,7 +16,7 @@ router = APIRouter()
 
 @router.post("/create_lootbox", response_model=ExclusiveLootbox, operation_id="create_exclusive_lootbox",
              summary="Create exclusive lootbox")
-async def create_lootbox(items: List[Dict[str, Any]], draws_count: Optional[int] = None):
+async def create_lootbox(items: List[Dict[str, Any]], name: str, draws_count: Optional[int] = None):
     lootbox_items = [
         ExclusiveItem(
             id=CUID_GENERATOR.generate(),
@@ -30,7 +27,9 @@ async def create_lootbox(items: List[Dict[str, Any]], draws_count: Optional[int]
         for item in items
     ]
     lootbox_id = CUID_GENERATOR.generate()
-    lootbox = ExclusiveLootbox(id=lootbox_id, items=lootbox_items, draws_count=draws_count, is_active=True)
+    lootbox_meta = Meta(name=name)
+    lootbox = ExclusiveLootbox(id=lootbox_id, meta=lootbox_meta, items=lootbox_items,
+                               draws_count=draws_count, is_active=True)
     await redis.set(lootbox_id, lootbox.model_dump_json())
     return lootbox
 
