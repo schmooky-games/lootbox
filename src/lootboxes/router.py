@@ -65,9 +65,45 @@ async def deactivate_lootbox(lootbox_id: str, update: LootboxDeactivate):
     lootbox = LootboxModel.model_validate(lootbox_dict)
 
     update_data = update.dict(exclude_unset=True)
+    update_data['is_active'] = False
     updated_lootbox = lootbox.copy(update=update_data)
 
-    await redis.set(lootbox_id, updated_lootbox.json())
+    await lootbox_cache.update(lootbox_id, updated_lootbox.json())
+    await lootbox_cache.get(lootbox_id)
+
+    return updated_lootbox
+
+
+@router.patch("/activate_lootbox/{lootbox_id}",
+              response_model=Union[EqualLootbox, WeightedLootbox, ExclusiveLootbox],
+              operation_id="activate_lootbox",
+              summary="Activate lootbox by id")
+async def deactivate_lootbox(lootbox_id: str, update: LootboxDeactivate):
+    lootbox_data = await redis.get(lootbox_id)
+
+    if not lootbox_data:
+        raise ErrorHTTPException(status_code=400, error_code=LOOTBOX_NOT_FOUND, detail="Lootbox not found")
+
+    lootbox_dict = json.loads(lootbox_data)
+
+    lootbox_type = lootbox_dict.get('type')
+    if lootbox_type == LootboxTypes.equal:
+        LootboxModel = EqualLootbox
+    elif lootbox_type == LootboxTypes.weighted:
+        LootboxModel = WeightedLootbox
+    elif lootbox_type == LootboxTypes.exclusive:
+        LootboxModel = ExclusiveLootbox
+    else:
+        raise ErrorHTTPException(status_code=400, error_code=666, detail=f"Unknown lootbox type")
+
+    lootbox = LootboxModel.model_validate(lootbox_dict)
+
+    update_data = update.dict(exclude_unset=True)
+    update_data['is_active'] = True
+    updated_lootbox = lootbox.copy(update=update_data)
+
+    await lootbox_cache.update(lootbox_id, updated_lootbox.json())
+    await lootbox_cache.get(lootbox_id)
 
     return updated_lootbox
 
