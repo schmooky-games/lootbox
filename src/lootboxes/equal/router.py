@@ -12,6 +12,7 @@ from src.lootboxes.utils.cuid_generator import CUID_GENERATOR
 from src.redis_connection import redis
 
 router = APIRouter()
+lootbox_cache = AsyncCache(maxsize=1000)
 
 
 @router.post("/create_lootbox", response_model=EqualLootbox, operation_id="create_equal_lootbox",
@@ -55,12 +56,10 @@ async def update_lootbox(lootbox_id: str, lootbox: EqualLootboxUpd):
     update_data['items'] = updated_items
     updated_lootbox = stored_lootbox_model.copy(update=update_data)
 
-    await redis.set(lootbox_id, updated_lootbox.json())
+    await lootbox_cache.update(lootbox_id, updated_lootbox.json())
+    await lootbox_cache.get(lootbox_id)
 
     return updated_lootbox
-
-
-lootbox_cache = AsyncCache(maxsize=1000)
 
 
 @router.get("/get_loot/{lootbox_id}", response_model=EqualItem, operation_id="get_loot_from_equal_lootbox",

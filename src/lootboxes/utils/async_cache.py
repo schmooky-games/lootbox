@@ -22,5 +22,5 @@ class AsyncCache:
 
     async def update(self, key, value):
         if key in self.cache:
-            self.cache[key] = value
+            del self.cache[key]
         await redis.set(key, value)

@@ -13,8 +13,6 @@ from src.lootboxes.weighted.schemas import WeightedLootbox
 from src.redis_connection import redis
 
 router = APIRouter()
-
-
 lootbox_cache = AsyncCache(maxsize=1000)
 
 
@@ -95,7 +93,7 @@ async def get_lootboxes(
                 offset -= 1
                 continue
 
-            lootbox_data = await lootbox_cache.get(key)
+            lootbox_data = await redis.get(key)
             if lootbox_data:
                 lootbox_dict = json.loads(lootbox_data)
                 lootbox_type = lootbox_dict.get('type')
