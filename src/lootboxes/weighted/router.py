@@ -3,16 +3,15 @@ from fastapi import APIRouter
 from typing import List, Dict, Any, Optional, Union
 
 from src.lootboxes.schemas import LootboxTypes
-from src.lootboxes.utils.async_cache import AsyncCache
 from src.lootboxes.utils.weighted_random import weighted_random
 from src.exceptions import ErrorHTTPException
 from src.lootboxes.constants import WRONG_LOOTBOX_TYPE, LOOTBOX_NOT_ACTIVE, LOOTBOX_NOT_FOUND, EMPTY_LOOTBOX
 from src.lootboxes.weighted.schemas import Meta, WeightedLootbox, WeightedItem, WeightedLootboxUpd
+from src.lootboxes.utils.async_cache import lootbox_cache
 from src.lootboxes.utils.cuid_generator import CUID_GENERATOR
 from src.redis_connection import redis
 
 router = APIRouter()
-lootbox_cache = AsyncCache(maxsize=1000)
 
 
 @router.post("/create_lootbox", response_model=WeightedLootbox, operation_id="create_weighted_lootbox",
@@ -57,7 +56,7 @@ async def update_lootbox(lootbox_id: str, lootbox: WeightedLootboxUpd):
     updated_lootbox = stored_lootbox_model.copy(update=update_data)
 
     await lootbox_cache.update(lootbox_id, updated_lootbox.json())
-    await lootbox_cache.get(lootbox_id)
+    # await lootbox_cache.get(lootbox_id)
 
     return updated_lootbox
 
@@ -72,8 +71,8 @@ async def get_loot(lootbox_id: str):
 
     lootbox_dict = json.loads(lootbox_data)
 
-    if not lootbox_dict.get('is_active', False):
-        raise ErrorHTTPException(status_code=400, error_code=LOOTBOX_NOT_ACTIVE, detail="Lootbox is not active")
+    # if not lootbox_dict['is_active']:
+    #     raise ErrorHTTPException(status_code=400, error_code=LOOTBOX_NOT_ACTIVE, detail="Lootbox is not active")
 
     lootbox_type = lootbox_dict.get('type')
     if lootbox_type != LootboxTypes.weighted:
@@ -84,6 +83,9 @@ async def get_loot(lootbox_id: str):
         )
 
     lootbox = WeightedLootbox.model_validate_json(lootbox_data)
+
+    if lootbox.is_active == False:
+        raise ErrorHTTPException(status_code=400, error_code=LOOTBOX_NOT_ACTIVE, detail="Lootbox is not active")
 
     if not lootbox.items:
         raise ErrorHTTPException(status_code=400, error_code=EMPTY_LOOTBOX, detail="No items in lootbox")

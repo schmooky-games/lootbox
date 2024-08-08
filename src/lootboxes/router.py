@@ -8,12 +8,11 @@ from src.lootboxes.schemas import LootboxTypes, LootboxDeactivate
 from src.lootboxes.constants import LOOTBOX_NOT_FOUND, WRONG_LOOTBOX_TYPE, EMPTY_LOOTBOXES_LIST
 from src.lootboxes.equal.schemas import EqualLootbox
 from src.lootboxes.exclusive.schemas import ExclusiveLootbox
-from src.lootboxes.utils.async_cache import AsyncCache
+from src.lootboxes.utils.async_cache import lootbox_cache
 from src.lootboxes.weighted.schemas import WeightedLootbox
 from src.redis_connection import redis
 
 router = APIRouter()
-lootbox_cache = AsyncCache(maxsize=1000)
 
 
 @router.get("/lootboxes/{lootbox_id}", response_model=Union[EqualLootbox, WeightedLootbox, ExclusiveLootbox],
@@ -45,7 +44,7 @@ async def get_lootbox(lootbox_id: str):
               operation_id="deactivate_lootbox",
               summary="Deactivate lootbox by id")
 async def deactivate_lootbox(lootbox_id: str, update: LootboxDeactivate):
-    lootbox_data = await redis.get(lootbox_id)
+    lootbox_data = await lootbox_cache.get(lootbox_id)
 
     if not lootbox_data:
         raise ErrorHTTPException(status_code=400, error_code=LOOTBOX_NOT_FOUND, detail="Lootbox not found")
@@ -79,7 +78,7 @@ async def deactivate_lootbox(lootbox_id: str, update: LootboxDeactivate):
               operation_id="activate_lootbox",
               summary="Activate lootbox by id")
 async def deactivate_lootbox(lootbox_id: str, update: LootboxDeactivate):
-    lootbox_data = await redis.get(lootbox_id)
+    lootbox_data = await lootbox_cache.get(lootbox_id)
 
     if not lootbox_data:
         raise ErrorHTTPException(status_code=400, error_code=LOOTBOX_NOT_FOUND, detail="Lootbox not found")

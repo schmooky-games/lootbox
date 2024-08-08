@@ -24,3 +24,6 @@ class AsyncCache:
         if key in self.cache:
             del self.cache[key]
         await redis.set(key, value)
+
+
+lootbox_cache = AsyncCache()

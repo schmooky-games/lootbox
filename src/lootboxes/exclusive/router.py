@@ -6,13 +6,12 @@ from src.exceptions import ErrorHTTPException
 from src.lootboxes.constants import WRONG_LOOTBOX_TYPE, LOOTBOX_NOT_FOUND, EMPTY_LOOTBOX, LOOTBOX_NOT_ACTIVE
 from src.lootboxes.exclusive.schemas import Meta, ExclusiveItem, ExclusiveLootbox, ExclusiveLootboxUpd
 from src.lootboxes.schemas import LootboxTypes
-from src.lootboxes.utils.async_cache import AsyncCache
+from src.lootboxes.utils.async_cache import lootbox_cache
 from src.lootboxes.utils.cuid_generator import CUID_GENERATOR
 from src.lootboxes.utils.weighted_random import weighted_random
 from src.redis_connection import redis
 
 router = APIRouter()
-lootbox_cache = AsyncCache()
 
 
 @router.post("/create_lootbox", response_model=ExclusiveLootbox, operation_id="create_exclusive_lootbox",
@@ -57,7 +56,7 @@ async def update_lootbox(lootbox_id: str, lootbox: ExclusiveLootboxUpd):
     updated_lootbox = stored_lootbox_model.copy(update=update_data)
 
     await lootbox_cache.update(lootbox_id, updated_lootbox.json())
-    await lootbox_cache.get(lootbox_id)
+    # await lootbox_cache.get(lootbox_id)
 
     return updated_lootbox
 
@@ -72,7 +71,7 @@ async def get_loot(lootbox_id: str):
 
     lootbox_dict = json.loads(lootbox_data)
 
-    if not lootbox_dict.get('is_active', False):
+    if not lootbox_dict['is_active']:
         raise ErrorHTTPException(status_code=400, error_code=LOOTBOX_NOT_ACTIVE, detail="Lootbox is not active")
 
     lootbox_type = lootbox_dict.get('type')
