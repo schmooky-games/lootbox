@@ -1,5 +1,5 @@
-# import uvloop
-# uvloop.install()
+import uvloop
+uvloop.install()
 from fastapi import FastAPI
 from fastapi_healthcheck import HealthCheckFactory, healthCheckRoute
 from prometheus_fastapi_instrumentator import Instrumentator
