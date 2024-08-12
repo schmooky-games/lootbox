@@ -1,5 +1,7 @@
 from secrets import randbits
+
 from NIST_Tests import NIST_Tests
+
 from tests.nist.utils import run_nist_tests
 
 nist_tests = NIST_Tests()

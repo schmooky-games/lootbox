@@ -1,28 +1,24 @@
 import os
-import numpy as np
 from tkinter import *
-from tkinter.filedialog import askopenfilename
-from tkinter.filedialog import asksaveasfile
 from tkinter import messagebox
+from tkinter.filedialog import askopenfilename, asksaveasfile
 
-from GUI import CustomButton
-from GUI import Input
-from GUI import LabelTag
-from GUI import RandomExcursionTestItem
-from GUI import TestItem
-from Tools import Tools
-
+import numpy as np
 from ApproximateEntropy import ApproximateEntropy as aet
 from Complexity import ComplexityTest as ct
 from CumulativeSum import CumulativeSums as cst
 from FrequencyTest import FrequencyTest as ft
+from GUI import (CustomButton, Input, LabelTag, RandomExcursionTestItem,
+                 TestItem)
 from Matrix import Matrix as mt
 from RandomExcursions import RandomExcursions as ret
 from RunTest import RunTest as rt
 from Serial import Serial as serial
 from Spectral import SpectralTest as st
 from TemplateMatching import TemplateMatching as tm
+from Tools import Tools
 from Universal import Universal as ut
+
 
 class Main(Frame):
 

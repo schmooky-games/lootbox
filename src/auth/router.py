@@ -1,6 +1,6 @@
 from fastapi import APIRouter, Depends
 
-from src.auth.service import verify_token, generate_jwt_token
+from src.auth.service import generate_jwt_token, verify_token
 
 router = APIRouter()
 

@@ -1,5 +1,7 @@
 import numpy as np
+
 from src.lootboxes.schemas import Lootbox
+
 
 def simulate_equal_lootbox_draws(lootbox: Lootbox, num_draws: int) -> str:
     draws = np.random.choice(

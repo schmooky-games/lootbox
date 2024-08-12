@@ -1,13 +1,14 @@
 import json
-from typing import Union, List
+from typing import List, Union
 
 from fastapi import APIRouter, Query
 
 from src.exceptions import ErrorHTTPException
-from src.lootboxes.schemas import LootboxTypes, LootboxDeactivate
-from src.lootboxes.constants import LOOTBOX_NOT_FOUND, WRONG_LOOTBOX_TYPE, EMPTY_LOOTBOXES_LIST
+from src.lootboxes.constants import (EMPTY_LOOTBOXES_LIST, LOOTBOX_NOT_FOUND,
+                                     WRONG_LOOTBOX_TYPE)
 from src.lootboxes.equal.schemas import EqualLootbox
 from src.lootboxes.exclusive.schemas import ExclusiveLootbox
+from src.lootboxes.schemas import LootboxDeactivate, LootboxTypes
 from src.lootboxes.utils.async_cache import lootbox_cache
 from src.lootboxes.weighted.schemas import WeightedLootbox
 from src.redis_connection import redis
@@ -26,7 +27,7 @@ async def get_lootbox(lootbox_id: str):
 
     lootbox_dict = json.loads(lootbox_data)
 
-    lootbox_type = lootbox_dict.get('type')
+    lootbox_type = lootbox_dict.get("type")
     if lootbox_type == LootboxTypes.equal:
         lootbox = EqualLootbox(**lootbox_dict)
     elif lootbox_type == LootboxTypes.weighted:
@@ -51,7 +52,7 @@ async def deactivate_lootbox(lootbox_id: str, update: LootboxDeactivate):
 
     lootbox_dict = json.loads(lootbox_data)
 
-    lootbox_type = lootbox_dict.get('type')
+    lootbox_type = lootbox_dict.get("type")
     if lootbox_type == LootboxTypes.equal:
         LootboxModel = EqualLootbox
     elif lootbox_type == LootboxTypes.weighted:
@@ -64,11 +65,10 @@ async def deactivate_lootbox(lootbox_id: str, update: LootboxDeactivate):
     lootbox = LootboxModel.model_validate(lootbox_dict)
 
     update_data = update.dict(exclude_unset=True)
-    update_data['is_active'] = False
+    update_data["is_active"] = False
     updated_lootbox = lootbox.copy(update=update_data)
 
     await lootbox_cache.update(lootbox_id, updated_lootbox.json())
-    await lootbox_cache.get(lootbox_id)
 
     return updated_lootbox
 
@@ -85,7 +85,7 @@ async def deactivate_lootbox(lootbox_id: str, update: LootboxDeactivate):
 
     lootbox_dict = json.loads(lootbox_data)
 
-    lootbox_type = lootbox_dict.get('type')
+    lootbox_type = lootbox_dict.get("type")
     if lootbox_type == LootboxTypes.equal:
         LootboxModel = EqualLootbox
     elif lootbox_type == LootboxTypes.weighted:
@@ -98,57 +98,63 @@ async def deactivate_lootbox(lootbox_id: str, update: LootboxDeactivate):
     lootbox = LootboxModel.model_validate(lootbox_dict)
 
     update_data = update.dict(exclude_unset=True)
-    update_data['is_active'] = True
+    update_data["is_active"] = True
     updated_lootbox = lootbox.copy(update=update_data)
 
     await lootbox_cache.update(lootbox_id, updated_lootbox.json())
-    await lootbox_cache.get(lootbox_id)
 
     return updated_lootbox
 
 
-@router.get("/lootboxes", response_model=List[Union[EqualLootbox, WeightedLootbox, ExclusiveLootbox]],
-            operation_id="get_lootboxes",
-            summary="Get list of lootboxes")
+@router.get("/lootboxes", response_model=List[Union[EqualLootbox, WeightedLootbox, ExclusiveLootbox]])
 async def get_lootboxes(
-        limit: int = Query(10, ge=1, le=100),
-        offset: int = Query(0, ge=0)
+    limit: int = Query(10, ge=1, le=100),
+    offset: int = Query(0, ge=0),
+    search: str = Query(None, min_length=1)
 ):
     lootboxes = []
     cursor = 0
+    total_scanned = 0
 
     while len(lootboxes) < limit:
-        cursor, keys = await redis.scan(cursor, count=limit - len(lootboxes))
+        cursor, keys = await redis.scan(cursor, count=100)
 
         for key in keys:
             if len(lootboxes) >= limit:
                 break
 
-            if offset > 0:
-                offset -= 1
+            total_scanned += 1
+            if total_scanned <= offset:
                 continue
 
             lootbox_data = await redis.get(key)
-            if lootbox_data:
-                lootbox_dict = json.loads(lootbox_data)
-                lootbox_type = lootbox_dict.get('type')
+            if not lootbox_data:
+                continue
 
-                if lootbox_type == LootboxTypes.equal:
-                    lootbox = EqualLootbox(**lootbox_dict)
-                elif lootbox_type == LootboxTypes.weighted:
-                    lootbox = WeightedLootbox(**lootbox_dict)
-                elif lootbox_type == LootboxTypes.exclusive:
-                    lootbox = ExclusiveLootbox(**lootbox_dict)
-                else:
-                    continue
+            lootbox_dict = json.loads(lootbox_data)
 
-                lootboxes.append(lootbox)
+            lootbox_type = lootbox_dict.get("type")
+            lootbox_name = lootbox_dict.get("meta")["name"].lower()
+
+            if search and search.lower() not in lootbox_name:
+                continue
+
+            if lootbox_type == LootboxTypes.equal:
+                lootbox = EqualLootbox(**lootbox_dict)
+            elif lootbox_type == LootboxTypes.weighted:
+                lootbox = WeightedLootbox(**lootbox_dict)
+            elif lootbox_type == LootboxTypes.exclusive:
+                lootbox = ExclusiveLootbox(**lootbox_dict)
+            else:
+                continue
+
+            lootboxes.append(lootbox)
 
         if cursor == 0:
             break
 
-    if len(lootboxes) == 0:
-        return ErrorHTTPException(status_code=400, error_code=EMPTY_LOOTBOXES_LIST, detail="No lootboxes")
+    if not lootboxes:
+        raise ErrorHTTPException(status_code=400, error_code=EMPTY_LOOTBOXES_LIST, detail="No lootboxes found")
 
     return lootboxes
 

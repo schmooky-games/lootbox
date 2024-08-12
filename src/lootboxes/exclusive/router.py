@@ -1,10 +1,13 @@
 import json
+from typing import Any, Dict, List, Optional
+
 from fastapi import APIRouter
-from typing import List, Dict, Any, Optional
 
 from src.exceptions import ErrorHTTPException
-from src.lootboxes.constants import WRONG_LOOTBOX_TYPE, LOOTBOX_NOT_FOUND, EMPTY_LOOTBOX, LOOTBOX_NOT_ACTIVE
-from src.lootboxes.exclusive.schemas import Meta, ExclusiveItem, ExclusiveLootbox, ExclusiveLootboxUpd
+from src.lootboxes.constants import (EMPTY_LOOTBOX, LOOTBOX_NOT_ACTIVE,
+                                     LOOTBOX_NOT_FOUND, WRONG_LOOTBOX_TYPE)
+from src.lootboxes.exclusive.schemas import (ExclusiveItem, ExclusiveLootbox,
+                                             ExclusiveLootboxUpd, Meta)
 from src.lootboxes.schemas import LootboxTypes
 from src.lootboxes.utils.async_cache import lootbox_cache
 from src.lootboxes.utils.cuid_generator import CUID_GENERATOR
@@ -20,9 +23,9 @@ async def create_lootbox(items: List[Dict[str, Any]], name: str, draws_count: Op
     lootbox_items = [
         ExclusiveItem(
             id=CUID_GENERATOR.generate(),
-            data=item.get('data', {}),
-            meta=Meta(name=item.get('meta', {}).get('name', '')),
-            weight=item.get('weight', 1.0)
+            data=item.get("data", {}),
+            meta=Meta(name=item.get("meta", {}).get("name", "")),
+            weight=item.get("weight", 1.0)
         )
         for item in items
     ]
@@ -41,7 +44,7 @@ async def update_lootbox(lootbox_id: str, lootbox: ExclusiveLootboxUpd):
     stored_lootbox_json = await redis.get(lootbox_id)
     stored_lootbox_data = json.loads(stored_lootbox_json)
 
-    lootbox_type = stored_lootbox_data.get('type')
+    lootbox_type = stored_lootbox_data.get("type")
     if lootbox_type != LootboxTypes.exclusive:
         raise ErrorHTTPException(
             status_code=400,
@@ -51,12 +54,11 @@ async def update_lootbox(lootbox_id: str, lootbox: ExclusiveLootboxUpd):
 
     stored_lootbox_model = ExclusiveLootbox(**stored_lootbox_data)
     updated_items = [ExclusiveItem(data=item.data, meta=item.meta, weight=item.weight) for item in lootbox.items]
-    update_data = lootbox.dict(exclude={'id', 'type', 'is_active'}, exclude_unset=True)
-    update_data['items'] = updated_items
+    update_data = lootbox.dict(exclude={"id", "type", "is_active"}, exclude_unset=True)
+    update_data["items"] = updated_items
     updated_lootbox = stored_lootbox_model.copy(update=update_data)
 
     await lootbox_cache.update(lootbox_id, updated_lootbox.json())
-    # await lootbox_cache.get(lootbox_id)
 
     return updated_lootbox
 
@@ -71,10 +73,7 @@ async def get_loot(lootbox_id: str):
 
     lootbox_dict = json.loads(lootbox_data)
 
-    if not lootbox_dict['is_active']:
-        raise ErrorHTTPException(status_code=400, error_code=LOOTBOX_NOT_ACTIVE, detail="Lootbox is not active")
-
-    lootbox_type = lootbox_dict.get('type')
+    lootbox_type = lootbox_dict.get("type")
     if lootbox_type != LootboxTypes.exclusive:
         raise ErrorHTTPException(
             status_code=400,
@@ -83,6 +82,9 @@ async def get_loot(lootbox_id: str):
         )
 
     lootbox = ExclusiveLootbox.model_validate_json(lootbox_data)
+
+    if not lootbox.is_active:
+        raise ErrorHTTPException(status_code=400, error_code=LOOTBOX_NOT_ACTIVE, detail="Lootbox is not active")
 
     if not lootbox.items:
         raise ErrorHTTPException(status_code=400, error_code=EMPTY_LOOTBOX, detail="No items in lootbox")

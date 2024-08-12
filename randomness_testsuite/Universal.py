@@ -1,8 +1,10 @@
 from math import floor as floor
 from math import log as log
 from math import sqrt as sqrt
+
 from numpy import zeros as zeros
 from scipy.special import erfc as erfc
+
 
 class Universal:
 

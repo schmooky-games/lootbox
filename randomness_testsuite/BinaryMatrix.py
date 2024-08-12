@@ -1,5 +1,6 @@
 from copy import copy as copy
 
+
 class BinaryMatrix:
 
     def __init__(self, matrix, rows, cols):

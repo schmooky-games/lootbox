@@ -1,8 +1,9 @@
 import json
-import pytest
 from collections import defaultdict
-from httpx import AsyncClient
+
+import pytest
 import pytest_asyncio
+from httpx import AsyncClient
 
 from src.main import app
 from src.redis_connection import redis

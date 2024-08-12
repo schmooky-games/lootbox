@@ -1,15 +1,7 @@
-from tkinter import Button
-from tkinter import Canvas
-from tkinter import Checkbutton
-from tkinter import DISABLED
-from tkinter import Entry
-from tkinter import Frame
-from tkinter import IntVar
-from tkinter import Label
-from tkinter import LabelFrame
-from tkinter import OptionMenu
-from tkinter import Scrollbar
-from tkinter import StringVar
+from tkinter import (DISABLED, Button, Canvas, Checkbutton, Entry, Frame,
+                     IntVar, Label, LabelFrame, OptionMenu, Scrollbar,
+                     StringVar)
+
 
 class CustomButton:
 

@@ -1,5 +1,7 @@
 from numpy import zeros as zeros
 from scipy.special import gammaincc as gammaincc
+
+
 class Serial:
 
     @staticmethod

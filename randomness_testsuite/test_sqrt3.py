@@ -1,15 +1,16 @@
 import os
+
+from ApproximateEntropy import ApproximateEntropy
+from Complexity import ComplexityTest
+from CumulativeSum import CumulativeSums
 from FrequencyTest import FrequencyTest
-from RunTest import RunTest
 from Matrix import Matrix
+from RandomExcursions import RandomExcursions
+from RunTest import RunTest
+from Serial import Serial
 from Spectral import SpectralTest
 from TemplateMatching import TemplateMatching
 from Universal import Universal
-from Complexity import ComplexityTest
-from Serial import Serial
-from ApproximateEntropy import ApproximateEntropy
-from CumulativeSum import CumulativeSums
-from RandomExcursions import RandomExcursions
 
 # Open Data File and read the binary data of e
 data_path = os.path.join(os.getcwd(), 'data', 'data.sqrt3')

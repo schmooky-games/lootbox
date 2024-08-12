@@ -1,7 +1,10 @@
-from randomness_testsuite.BinaryMatrix import BinaryMatrix as bm
 from math import exp as exp
 from math import floor as floor
+
 from numpy import zeros as zeros
+
+from randomness_testsuite.BinaryMatrix import BinaryMatrix as bm
+
 
 class Matrix:
 

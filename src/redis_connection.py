@@ -1,4 +1,5 @@
 from redis.asyncio import ConnectionPool, Redis
+
 from src.config import REDIS_URI
 
 redis_pool = ConnectionPool.from_url(

@@ -1,4 +1,5 @@
 from math import floor as floor
+
 from numpy import array as array
 from numpy import exp as exp
 from numpy import zeros as zeros

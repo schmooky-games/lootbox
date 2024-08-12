@@ -1,7 +1,8 @@
-from pydantic import BaseModel, Field
-from typing import List, Dict, Any, Optional
+from typing import Any, Dict, List, Optional
 
-from src.lootboxes.schemas import Meta, LootboxTypes
+from pydantic import BaseModel, Field
+
+from src.lootboxes.schemas import LootboxTypes, Meta
 from src.lootboxes.utils.cuid_generator import CUID_GENERATOR
 
 

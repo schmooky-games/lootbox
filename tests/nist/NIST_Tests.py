@@ -1,14 +1,14 @@
+from randomness_testsuite.ApproximateEntropy import ApproximateEntropy
+from randomness_testsuite.Complexity import ComplexityTest
+from randomness_testsuite.CumulativeSum import CumulativeSums
 from randomness_testsuite.FrequencyTest import FrequencyTest
-from randomness_testsuite.RunTest import RunTest
 from randomness_testsuite.Matrix import Matrix
+from randomness_testsuite.RandomExcursions import RandomExcursions
+from randomness_testsuite.RunTest import RunTest
+from randomness_testsuite.Serial import Serial
 from randomness_testsuite.Spectral import SpectralTest
 from randomness_testsuite.TemplateMatching import TemplateMatching
 from randomness_testsuite.Universal import Universal
-from randomness_testsuite.Complexity import ComplexityTest
-from randomness_testsuite.Serial import Serial
-from randomness_testsuite.ApproximateEntropy import ApproximateEntropy
-from randomness_testsuite.CumulativeSum import CumulativeSums
-from randomness_testsuite.RandomExcursions import RandomExcursions
 
 
 class NIST_Tests:

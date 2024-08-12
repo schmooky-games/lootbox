@@ -1,8 +1,9 @@
-from fastapi_healthcheck.service import HealthCheckBase
-from fastapi_healthcheck.enum import HealthCheckStatusEnum
-from fastapi_healthcheck.domain import HealthCheckInterface
 from typing import List
+
 import redis
+from fastapi_healthcheck.domain import HealthCheckInterface
+from fastapi_healthcheck.enum import HealthCheckStatusEnum
+from fastapi_healthcheck.service import HealthCheckBase
 
 
 class HealthCheckRedis(HealthCheckBase, HealthCheckInterface):
@@ -24,6 +25,6 @@ class HealthCheckRedis(HealthCheckBase, HealthCheckInterface):
         except Exception as e:
             self._message = str(e)
         finally:
-            if 'connection' in locals():
+            if "connection" in locals():
                 connection.close()
         return res

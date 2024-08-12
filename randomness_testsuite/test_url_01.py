@@ -1,17 +1,17 @@
 import os
-from Tools import Tools
 
+from ApproximateEntropy import ApproximateEntropy as aet
+from Complexity import ComplexityTest as ct
+from CumulativeSum import CumulativeSums as cst
 from FrequencyTest import FrequencyTest as ft
-from RunTest import RunTest as rt
 from Matrix import Matrix as mt
+from RandomExcursions import RandomExcursions as ret
+from RunTest import RunTest as rt
+from Serial import Serial as serial
 from Spectral import SpectralTest as st
 from TemplateMatching import TemplateMatching as tm
+from Tools import Tools
 from Universal import Universal as ut
-from Complexity import ComplexityTest as ct
-from Serial import Serial as serial
-from ApproximateEntropy import ApproximateEntropy as aet
-from CumulativeSum import CumulativeSums as cst
-from RandomExcursions import RandomExcursions as ret
 
 test_type = ['01. Frequency Test (Monobit)', '02. Frequency Test within a Block', '03. Run Test',
                             '04. Longest Run of Ones in a Block', '05. Binary Matrix Rank Test',

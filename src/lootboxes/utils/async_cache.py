@@ -5,7 +5,7 @@ from src.redis_connection import redis
 
 
 class AsyncCache:
-    def __init__(self, maxsize=1000):
+    def __init__(self, maxsize=10000):
         self.cache = OrderedDict()
         self.maxsize = maxsize
 

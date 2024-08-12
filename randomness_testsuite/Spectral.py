@@ -2,9 +2,11 @@ from math import fabs as fabs
 from math import floor as floor
 from math import log as log
 from math import sqrt as sqrt
+
 from numpy import where as where
 from scipy import fftpack as sff
 from scipy.special import erfc as erfc
+
 
 class SpectralTest:
 

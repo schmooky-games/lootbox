@@ -7,6 +7,7 @@ from numpy import sum as sum
 from numpy import zeros as zeros
 from scipy.stats import norm as norm
 
+
 class CumulativeSums:
 
     @staticmethod

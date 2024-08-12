@@ -1,8 +1,10 @@
 from copy import copy as copy
+
 from numpy import dot as dot
 from numpy import histogram as histogram
 from numpy import zeros as zeros
 from scipy.special import gammaincc as gammaincc
+
 
 class ComplexityTest:
 

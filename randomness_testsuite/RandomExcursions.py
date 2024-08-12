@@ -1,4 +1,5 @@
 from math import isnan as isnan
+
 from numpy import abs as abs
 from numpy import append as append
 from numpy import array as array
@@ -12,6 +13,7 @@ from numpy import where as where
 from numpy import zeros as zeros
 from scipy.special import erfc as erfc
 from scipy.special import gammaincc as gammaincc
+
 
 class RandomExcursions:
 

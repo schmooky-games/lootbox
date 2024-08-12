@@ -1,13 +1,14 @@
+import time
+from datetime import datetime, timedelta
+from typing import Dict
+
 import jwt
-from datetime import timedelta, datetime
 from fastapi import Depends, HTTPException
 from fastapi.security import HTTPBearer
-from typing import Dict
-import time
 from redis.asyncio import Redis
 
-from src.redis_connection import redis
 from src.config import SECRET_KEY
+from src.redis_connection import redis
 
 TOKEN_EXPIRATION = timedelta(hours=1)
 CACHE_CAPACITY = 10000

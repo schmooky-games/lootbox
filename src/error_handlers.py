@@ -1,5 +1,5 @@
+from fastapi import FastAPI, Request
 from fastapi.responses import JSONResponse
-from fastapi import Request, FastAPI
 
 from src.exceptions import ErrorHTTPException
 
