@@ -12,19 +12,20 @@ export default defineConfig({
 			},
 			sidebar: [
 				{
-					label: 'Getting Started',
-					autogenerate: { directory: 'getting-started' },
-				},
-				{
-					label: 'Guides',
+					label: 'Общие методы',
 					items: [
-						// Each item here is one entry in the navigation menu.
-						{ label: 'Example Guide', slug: 'guides/example' },
+						'general-methods/get-lootbox',
+						'general-methods/get-list-total',
+						'general-methods/deactivating-activating',
 					],
 				},
 				{
-					label: 'Reference',
-					autogenerate: { directory: 'reference' },
+					label: 'Работа с разными типами лутбоксов',
+					items: [
+						'lootboxes/equal',
+						'lootboxes/weighted',
+						'lootboxes/exclusive',
+					],
 				},
 			],
 			customCss: ['./src/tailwind.css'],

@@ -1,0 +1,144 @@
+---
+title: Получение информации о лутбоксе
+description: Получение информации о лутбоксе
+---
+
+import { Tabs, TabItem } from '@astrojs/starlight/components';
+
+## Получение информации о конкретном лутбоксе
+
+**Endpoint:** `GET /lootboxes/{lootbox_id}`
+
+Возвращает информацию о конкретном лутбоксе по его идентификатору.
+
+**Параметры пути:**
+- `lootbox_id` (строка): Идентификатор лутбокса.
+
+**Ответ:**
+Возвращает объект лутбокса (`EqualLootbox`, `WeightedLootbox` или `ExclusiveLootbox`).
+
+<Tabs>
+  <TabItem label="EqualLootbox">
+    ```json
+    {
+      "id": "eb9f21d4-c5f7-4108-8f05-e7b23b6c84d1",
+      "meta": {
+        "name": "Пример лутбокса"
+      },
+      "type": "equal",
+      "items": [
+        {
+          "id": "item1",
+          "data": { "value": "" },
+          "meta": {
+            "name": "Меч"
+          }
+        },
+        {
+          "id": "item2",
+          "data": { "value": "" },
+          "meta": {
+            "name": "Щит"
+          }
+        },
+        {
+          "id": "item3",
+          "data": { "value": "" },
+          "meta": {
+            "name": "Зелье здоровья"
+          }
+        }
+      ],
+      "draws_count": 5,
+      "is_active": true
+    }
+    ```
+  </TabItem>
+  <TabItem label="WeightedLootbox">
+    ```json
+    {
+      "id": "7a9e8b3c-2d1f-4e6a-9c8b-3d7f1e2a5b4c",
+      "meta": {
+        "name": "Пример взвешенного лутбокса"
+      },
+      "type": "weighted",
+      "items": [
+        {
+          "id": "item1",
+          "data": { "value": "" },
+          "meta": {
+            "name": "Редкий меч"
+          },
+          "weight": 10.0
+        },
+        {
+          "id": "item2",
+          "data": { "value": "" },
+          "meta": {
+            "name": "Обычный щит"
+          },
+          "weight": 30.0
+        },
+        {
+          "id": "item3",
+          "data": { "value": "" },
+          "meta": {
+            "name": "Зелье маны"
+          },
+          "weight": 60.0
+        }
+      ],
+      "draws_count": 3,
+      "is_active": true
+    }
+    ```
+  </TabItem>
+  <TabItem label="ExclusiveLootbox">
+    ```json
+    {
+      "id": "5c4b3a2d-1e9f-8g7h-6i5j-4k3l2m1n0o9p",
+      "meta": {
+        "name": "Пример эксклюзивного лутбокса"
+      },
+      "type": "exclusive",
+      "items": [
+        {
+          "id": "item1",
+          "data": { "value": "" },
+          "meta": {
+            "name": "Легендарный щит"
+          },
+          "weight": 5.0
+        },
+        {
+          "id": "item2",
+          "data": { "value": "" },
+          "meta": {
+            "name": "Обычный меч"
+          },
+          "weight": 25.0
+        },
+        {
+          "id": "item3",
+          "data": { "value": "" },
+          "meta": {
+            "name": "Зелье исцеления"
+          },
+          "weight": 15.0
+        }
+      ],
+      "draws_count": 2,
+      "is_active": true
+    }
+    ```
+  </TabItem>
+</Tabs>
+
+## Обработка ошибок
+
+API может возвращать следующие ошибки:
+
+- `400 Bad Request`:
+  - `1001`: Лутбокс не найден.
+
+При возникновении ошибки API возвращает соответствующий статус-код и детальное описание проблемы.
