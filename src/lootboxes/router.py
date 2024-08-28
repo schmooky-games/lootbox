@@ -1,14 +1,14 @@
 import json
-from typing import List, Union
+from typing import List, Union, Dict
 
 from fastapi import APIRouter, Query
 
 from src.exceptions import ErrorHTTPException
 from src.lootboxes.constants import (EMPTY_LOOTBOXES_LIST, LOOTBOX_NOT_FOUND,
-                                     WRONG_LOOTBOX_TYPE)
+                                     WRONG_LOOTBOX_TYPE, UKNOWN_LOOTBOX_TYPE)
 from src.lootboxes.equal.schemas import EqualLootbox
 from src.lootboxes.exclusive.schemas import ExclusiveLootbox
-from src.lootboxes.schemas import LootboxDeactivate, LootboxTypes
+from src.lootboxes.schemas import LootboxUpdState, LootboxTypes
 from src.lootboxes.utils.async_cache import lootbox_cache
 from src.lootboxes.weighted.schemas import WeightedLootbox
 from src.redis_connection import redis
@@ -19,7 +19,7 @@ router = APIRouter()
 @router.get("/lootboxes/{lootbox_id}", response_model=Union[EqualLootbox, WeightedLootbox, ExclusiveLootbox],
             operation_id="get_lootbox",
             summary="Get lootbox by id")
-async def get_lootbox(lootbox_id: str):
+async def get_lootbox(lootbox_id: str) -> Union[EqualLootbox, WeightedLootbox, ExclusiveLootbox]:
     lootbox_data = await lootbox_cache.get(lootbox_id)
 
     if not lootbox_data:
@@ -35,7 +35,7 @@ async def get_lootbox(lootbox_id: str):
     elif lootbox_type == LootboxTypes.exclusive:
         lootbox = ExclusiveLootbox(**lootbox_dict)
     else:
-        raise ErrorHTTPException(status_code=400, error_code=WRONG_LOOTBOX_TYPE, detail=f"Unknown lootbox type")
+        raise ErrorHTTPException(status_code=400, error_code=WRONG_LOOTBOX_TYPE, detail="Unknown lootbox type")
 
     return lootbox
 
@@ -44,7 +44,8 @@ async def get_lootbox(lootbox_id: str):
               response_model=Union[EqualLootbox, WeightedLootbox, ExclusiveLootbox],
               operation_id="deactivate_lootbox",
               summary="Deactivate lootbox by id")
-async def deactivate_lootbox(lootbox_id: str, update: LootboxDeactivate):
+async def deactivate_lootbox(lootbox_id: str, update: LootboxUpdState)\
+        -> Union[EqualLootbox, WeightedLootbox, ExclusiveLootbox]:
     lootbox_data = await lootbox_cache.get(lootbox_id)
 
     if not lootbox_data:
@@ -60,7 +61,7 @@ async def deactivate_lootbox(lootbox_id: str, update: LootboxDeactivate):
     elif lootbox_type == LootboxTypes.exclusive:
         LootboxModel = ExclusiveLootbox
     else:
-        raise ErrorHTTPException(status_code=400, error_code=666, detail=f"Unknown lootbox type")
+        raise ErrorHTTPException(status_code=400, error_code=UKNOWN_LOOTBOX_TYPE, detail="Unknown lootbox type")
 
     lootbox = LootboxModel.model_validate(lootbox_dict)
 
@@ -77,7 +78,8 @@ async def deactivate_lootbox(lootbox_id: str, update: LootboxDeactivate):
               response_model=Union[EqualLootbox, WeightedLootbox, ExclusiveLootbox],
               operation_id="activate_lootbox",
               summary="Activate lootbox by id")
-async def deactivate_lootbox(lootbox_id: str, update: LootboxDeactivate):
+async def activate_lootbox(lootbox_id: str, update: LootboxUpdState)\
+        -> Union[EqualLootbox, WeightedLootbox]:
     lootbox_data = await lootbox_cache.get(lootbox_id)
 
     if not lootbox_data:
@@ -93,7 +95,7 @@ async def deactivate_lootbox(lootbox_id: str, update: LootboxDeactivate):
     elif lootbox_type == LootboxTypes.exclusive:
         LootboxModel = ExclusiveLootbox
     else:
-        raise ErrorHTTPException(status_code=400, error_code=666, detail=f"Unknown lootbox type")
+        raise ErrorHTTPException(status_code=400, error_code=UKNOWN_LOOTBOX_TYPE, detail="Unknown lootbox type")
 
     lootbox = LootboxModel.model_validate(lootbox_dict)
 
@@ -111,7 +113,7 @@ async def get_lootboxes(
     limit: int = Query(10, ge=1, le=100),
     offset: int = Query(0, ge=0),
     search: str = Query(None, min_length=1)
-):
+) -> List[Union[EqualLootbox, WeightedLootbox, ExclusiveLootbox]]:
     lootboxes = []
     cursor = 0
     total_scanned = 0
@@ -160,6 +162,6 @@ async def get_lootboxes(
 
 
 @router.get("/lootboxes_total_count")
-async def total_count():
+async def total_count() -> Dict[str, int]:
     lootboxes_count = await redis.dbsize()
     return {"total_count": lootboxes_count}

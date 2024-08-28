@@ -13,5 +13,5 @@ class Meta(BaseModel):
     name: str
 
 
-class LootboxDeactivate(BaseModel):
+class LootboxUpdState(BaseModel):
     is_active: bool = False

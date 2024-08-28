@@ -20,7 +20,8 @@ router = APIRouter()
 
 @router.post("/create_lootbox", response_model=WeightedLootbox, operation_id="create_weighted_lootbox",
              summary="Create weighted lootbox")
-async def create_lootbox(items: List[Dict[str, Union[Any, float]]], name: str, draws_count: Optional[int] = None):
+async def create_lootbox(items: List[Dict[str, Union[Any, float]]], name: str, draws_count: Optional[int] = None)\
+        -> WeightedLootbox:
     lootbox_items = [
         WeightedItem(
             id=CUID_GENERATOR.generate(),
@@ -41,7 +42,7 @@ async def create_lootbox(items: List[Dict[str, Union[Any, float]]], name: str, d
 @router.patch("/update_lootbox/{lootbox_id}", response_model=WeightedLootbox,
               operation_id="update_weighted_lootbox",
               summary="Update weighted lootbox content")
-async def update_lootbox(lootbox_id: str, lootbox: WeightedLootboxUpd):
+async def update_lootbox(lootbox_id: str, lootbox: WeightedLootboxUpd) -> WeightedLootbox:
     stored_lootbox_json = await redis.get(lootbox_id)
     stored_lootbox_data = json.loads(stored_lootbox_json)
 
@@ -66,7 +67,7 @@ async def update_lootbox(lootbox_id: str, lootbox: WeightedLootboxUpd):
 
 @router.get("/get_loot/{lootbox_id}", response_model=WeightedItem, operation_id="get_loot_from_weighted_lootbox",
             summary="Get loot from weighted lootbox")
-async def get_loot(lootbox_id: str):
+async def get_loot(lootbox_id: str) -> WeightedItem:
     lootbox_data = await lootbox_cache.get(lootbox_id)
 
     if not lootbox_data:

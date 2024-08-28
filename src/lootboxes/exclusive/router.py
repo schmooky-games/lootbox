@@ -19,7 +19,8 @@ router = APIRouter()
 
 @router.post("/create_lootbox", response_model=ExclusiveLootbox, operation_id="create_exclusive_lootbox",
              summary="Create exclusive lootbox")
-async def create_lootbox(items: List[Dict[str, Any]], name: str, draws_count: Optional[int] = None):
+async def create_lootbox(items: List[Dict[str, Any]], name: str, draws_count: Optional[int] = None)\
+        -> ExclusiveLootbox:
     lootbox_items = [
         ExclusiveItem(
             id=CUID_GENERATOR.generate(),
@@ -40,7 +41,7 @@ async def create_lootbox(items: List[Dict[str, Any]], name: str, draws_count: Op
 @router.patch("/update_lootbox/{lootbox_id}", response_model=ExclusiveLootbox,
               operation_id="update_exclusive_lootbox",
               summary="Update exclusive lootbox content")
-async def update_lootbox(lootbox_id: str, lootbox: ExclusiveLootboxUpd):
+async def update_lootbox(lootbox_id: str, lootbox: ExclusiveLootboxUpd) -> ExclusiveLootbox:
     stored_lootbox_json = await redis.get(lootbox_id)
     stored_lootbox_data = json.loads(stored_lootbox_json)
 
@@ -65,7 +66,7 @@ async def update_lootbox(lootbox_id: str, lootbox: ExclusiveLootboxUpd):
 
 @router.get("/get_loot/{lootbox_id}", response_model=ExclusiveItem, operation_id="get_loot_from_exclusive_box",
             summary="Get loot from weighted lootbox")
-async def get_loot(lootbox_id: str):
+async def get_loot(lootbox_id: str) -> ExclusiveItem:
     lootbox_data = await lootbox_cache.get(lootbox_id)
 
     if not lootbox_data:

@@ -19,7 +19,7 @@ router = APIRouter()
 
 @router.post("/create_lootbox", response_model=EqualLootbox, operation_id="create_equal_lootbox",
              summary="Create equal lootbox")
-async def create_lootbox(items: List[Dict[str, Any]], name: str, draws_count: Optional[int] = None):
+async def create_lootbox(items: List[Dict[str, Any]], name: str, draws_count: Optional[int] = None) -> EqualLootbox:
     lootbox_items = [
         EqualItem(
             id=CUID_GENERATOR.generate(),
@@ -39,7 +39,7 @@ async def create_lootbox(items: List[Dict[str, Any]], name: str, draws_count: Op
 @router.patch("/update_lootbox/{lootbox_id}", response_model=EqualLootbox,
               operation_id="update_equal_lootbox",
               summary="Update equal lootbox content")
-async def update_lootbox(lootbox_id: str, lootbox: EqualLootboxUpd):
+async def update_lootbox(lootbox_id: str, lootbox: EqualLootboxUpd) -> EqualLootbox:
     stored_lootbox_json = await redis.get(lootbox_id)
     stored_lootbox_dict = json.loads(stored_lootbox_json)
 
@@ -65,7 +65,7 @@ async def update_lootbox(lootbox_id: str, lootbox: EqualLootboxUpd):
 
 @router.get("/get_loot/{lootbox_id}", response_model=EqualItem, operation_id="get_loot_from_equal_lootbox",
             summary="Get loot from equal lootbox")
-async def get_loot(lootbox_id: str):
+async def get_loot(lootbox_id: str) -> EqualItem:
     lootbox_data = await lootbox_cache.get(lootbox_id)
 
     if not lootbox_data:
